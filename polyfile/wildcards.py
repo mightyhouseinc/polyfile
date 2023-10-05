@@ -10,10 +10,7 @@ class Wildcard(ABC):
         raise NotImplementedError()
 
     def is_contained_in(self, items: Iterable[str]) -> bool:
-        for item in items:
-            if self.match(item):
-                return True
-        return False
+        return any(self.match(item) for item in items)
 
     @staticmethod
     def parse(to_test: str) -> "Wildcard":
@@ -47,7 +44,7 @@ class SimpleWildcard(Wildcard):
         component: str = ""
         for last_c, c in zip((None,) + tuple(self.raw_pattern), self.raw_pattern):
             escaped = last_c is not None and last_c == "\\"
-            if not escaped and (c == "*" or c == "?"):
+            if not escaped and c in ["*", "?"]:
                 if component:
                     components.append(re.escape(component))
                     component = ""

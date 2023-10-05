@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Au(KaitaiStruct):
     """The NeXT/Sun audio file format.
@@ -87,7 +89,7 @@ class Au(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(4)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x2E\x73\x6E\x64":
+        if self.magic != b"\x2E\x73\x6E\x64":
             raise kaitaistruct.ValidationNotEqualError(b"\x2E\x73\x6E\x64", self.magic, self._io, u"/seq/0")
         self._debug['ofs_data']['start'] = self._io.pos()
         self.ofs_data = self._io.read_u4be()
@@ -120,7 +122,7 @@ class Au(KaitaiStruct):
             self._debug['num_channels']['start'] = self._io.pos()
             self.num_channels = self._io.read_u4be()
             self._debug['num_channels']['end'] = self._io.pos()
-            if not self.num_channels >= 1:
+            if self.num_channels < 1:
                 raise kaitaistruct.ValidationLessThanError(1, self.num_channels, self._io, u"/types/header/seq/3")
             self._debug['comment']['start'] = self._io.pos()
             self.comment = (KaitaiStream.bytes_terminate(self._io.read_bytes_full(), 0, False)).decode(u"ASCII")

@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DosMz(KaitaiStruct):
     """DOS MZ file format is a traditional format for executables in MS-DOS
@@ -76,7 +78,7 @@ class DosMz(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = (self._io.read_bytes(2)).decode(u"ASCII")
             self._debug['magic']['end'] = self._io.pos()
-            if not  ((self.magic == u"MZ") or (self.magic == u"ZM")) :
+            if self.magic not in [u"MZ", u"ZM"]:
                 raise kaitaistruct.ValidationNotAnyOfError(self.magic, self._io, u"/types/mz_header/seq/0")
             self._debug['last_page_extra_bytes']['start'] = self._io.pos()
             self.last_page_extra_bytes = self._io.read_u2le()
@@ -156,7 +158,7 @@ class DosMz(KaitaiStruct):
             self._debug['_m_relocations']['start'] = io.pos()
             self._m_relocations = [None] * (self.header.mz.num_relocations)
             for i in range(self.header.mz.num_relocations):
-                if not 'arr' in self._debug['_m_relocations']:
+                if 'arr' not in self._debug['_m_relocations']:
                     self._debug['_m_relocations']['arr'] = []
                 self._debug['_m_relocations']['arr'].append({'start': io.pos()})
                 _t__m_relocations = DosMz.Relocation(io, self, self._root)

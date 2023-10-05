@@ -87,10 +87,7 @@ class FailedBreakpoint(Breakpoint):
         if not command.startswith("!"):
             return None
         parent = Breakpoint.from_str(command[1:])
-        if parent is not None:
-            return FailedBreakpoint(parent)
-        else:
-            return None
+        return FailedBreakpoint(parent) if parent is not None else None
 
     @classmethod
     def print_usage(cls, debugger: "Debugger"):
@@ -121,10 +118,7 @@ class MatchedBreakpoint(Breakpoint):
         if not command.startswith("="):
             return None
         parent = Breakpoint.from_str(command[1:])
-        if parent is not None:
-            return MatchedBreakpoint(parent)
-        else:
-            return None
+        return MatchedBreakpoint(parent) if parent is not None else None
 
     @classmethod
     def print_usage(cls, debugger: "Debugger"):
@@ -232,9 +226,7 @@ class FileBreakpoint(Breakpoint):
             line = int("".join(remainder))
         except ValueError:
             return None
-        if line <= 0:
-            return None
-        return FileBreakpoint(filename, line)
+        return None if line <= 0 else FileBreakpoint(filename, line)
 
     @classmethod
     def print_usage(cls, debugger: "Debugger"):
@@ -345,9 +337,7 @@ class BooleanVariable(Variable[bool]):
         except ValueError:
             pass
         value = value.strip().lower()
-        if value == "0" or value == "f":
-            return False
-        return bool(value)
+        return False if value in {"0", "f"} else bool(value)
 
     def __bool__(self):
         return self.value
@@ -639,7 +629,7 @@ class Debugger(REPL):
                 continue
             self.write(f"  {key!r}", color=ANSIColor.BLUE)
             self.write(": ", bold=True)
-            if isinstance(value, int) or isinstance(value, float):
+            if isinstance(value, (int, float)):
                 self.write(str(value))
             else:
                 self.write(repr(value), color=ANSIColor.GREEN)
@@ -912,28 +902,27 @@ class Debugger(REPL):
                 self.write(parsed, color=ANSIColor.MAGENTA)
                 self.write("\n")
                 self.breakpoints.append(parsed)
+        elif self.breakpoints:
+            for i, b in enumerate(self.breakpoints):
+                self.write(f"{i}:\t", dim=True)
+                self.write(b, color=ANSIColor.MAGENTA)
+                self.write("\n")
         else:
-            if self.breakpoints:
-                for i, b in enumerate(self.breakpoints):
-                    self.write(f"{i}:\t", dim=True)
-                    self.write(b, color=ANSIColor.MAGENTA)
-                    self.write("\n")
-            else:
-                self.write("No breakpoints set.\n", color=ANSIColor.RED)
-                for b_type in BREAKPOINT_TYPES:
-                    b_type.print_usage(self)
-                    self.write("\n")
-                self.write("\nBy default, breakpoints will trigger whenever a matching test is run.\n\n"
-                           "Prepend a breakpoint with ")
-                self.write("!", bold=True)
-                self.write(" to only trigger the breakpoint when the test fails.\nFor Example:\n")
-                self.write("    b !MIME:application/zip\n", color=ANSIColor.MAGENTA)
-                self.write("will only trigger if a test that could match a ZIP file failed.\n\n"
-                           "Prepend a breakpoint with ")
-                self.write("=", bold=True)
-                self.write(" to only trigger the breakpoint when the test passes.\n For example:\n")
-                self.write("    b =archive:1337\n", color=ANSIColor.MAGENTA)
-                self.write("will only trigger if the test on line 1337 of the archive DSL matched.\n\n")
+            self.write("No breakpoints set.\n", color=ANSIColor.RED)
+            for b_type in BREAKPOINT_TYPES:
+                b_type.print_usage(self)
+                self.write("\n")
+            self.write("\nBy default, breakpoints will trigger whenever a matching test is run.\n\n"
+                       "Prepend a breakpoint with ")
+            self.write("!", bold=True)
+            self.write(" to only trigger the breakpoint when the test fails.\nFor Example:\n")
+            self.write("    b !MIME:application/zip\n", color=ANSIColor.MAGENTA)
+            self.write("will only trigger if a test that could match a ZIP file failed.\n\n"
+                       "Prepend a breakpoint with ")
+            self.write("=", bold=True)
+            self.write(" to only trigger the breakpoint when the test passes.\n For example:\n")
+            self.write("    b =archive:1337\n", color=ANSIColor.MAGENTA)
+            self.write("will only trigger if the test on line 1337 of the archive DSL matched.\n\n")
 
     @arg_completer(for_command="delete")
     def delete_completer(self, index: int, arg: str, prev_arguments: Iterable[str]):

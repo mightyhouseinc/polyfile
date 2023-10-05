@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class ChromePak(KaitaiStruct):
     """Format mostly used by Google Chrome and various Android apps to store
@@ -41,7 +43,7 @@ class ChromePak(KaitaiStruct):
         self._debug['version']['start'] = self._io.pos()
         self.version = self._io.read_u4le()
         self._debug['version']['end'] = self._io.pos()
-        if not  ((self.version == 4) or (self.version == 5)) :
+        if self.version not in [4, 5]:
             raise kaitaistruct.ValidationNotAnyOfError(self.version, self._io, u"/seq/0")
         if self.version == 4:
             self._debug['num_resources_v4']['start'] = self._io.pos()
@@ -60,7 +62,7 @@ class ChromePak(KaitaiStruct):
         self._debug['resources']['start'] = self._io.pos()
         self.resources = [None] * ((self.num_resources + 1))
         for i in range((self.num_resources + 1)):
-            if not 'arr' in self._debug['resources']:
+            if 'arr' not in self._debug['resources']:
                 self._debug['resources']['arr'] = []
             self._debug['resources']['arr'].append({'start': self._io.pos()})
             _t_resources = ChromePak.Resource(i, i < self.num_resources, self._io, self, self._root)
@@ -72,7 +74,7 @@ class ChromePak(KaitaiStruct):
         self._debug['aliases']['start'] = self._io.pos()
         self.aliases = [None] * (self.num_aliases)
         for i in range(self.num_aliases):
-            if not 'arr' in self._debug['aliases']:
+            if 'arr' not in self._debug['aliases']:
                 self._debug['aliases']['arr'] = []
             self._debug['aliases']['arr'].append({'start': self._io.pos()})
             _t_aliases = ChromePak.Alias(self._io, self, self._root)

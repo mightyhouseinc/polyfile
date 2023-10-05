@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Bson(KaitaiStruct):
     """BSON, short for Binary JSON, is a binary-encoded serialization of JSON-like documents. Like JSON, BSON supports the embedding of documents and arrays within other documents and arrays. BSON also contains extensions that allow representation of data types that are not part of the JSON spec. For example, BSON has a Date type and a BinData type. BSON can be compared to binary interchange formats, like Protocol Buffers. BSON is more "schemaless" than Protocol Buffers, which can give it an advantage in flexibility but also a slight disadvantage in space efficiency (BSON has overhead for field names within the serialized data). BSON was designed to have the following three characteristics:
@@ -36,7 +38,7 @@ class Bson(KaitaiStruct):
         self._debug['terminator']['start'] = self._io.pos()
         self.terminator = self._io.read_bytes(1)
         self._debug['terminator']['end'] = self._io.pos()
-        if not self.terminator == b"\x00":
+        if self.terminator != b"\x00":
             raise kaitaistruct.ValidationNotEqualError(b"\x00", self.terminator, self._io, u"/seq/2")
 
     class Timestamp(KaitaiStruct):
@@ -125,7 +127,7 @@ class Bson(KaitaiStruct):
             self.elements = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['elements']:
+                if 'arr' not in self._debug['elements']:
                     self._debug['elements']['arr'] = []
                 self._debug['elements']['arr'].append({'start': self._io.pos()})
                 _t_elements = Bson.Element(self._io, self, self._root)
@@ -169,7 +171,7 @@ class Bson(KaitaiStruct):
             self._debug['terminator']['start'] = self._io.pos()
             self.terminator = self._io.read_bytes(1)
             self._debug['terminator']['end'] = self._io.pos()
-            if not self.terminator == b"\x00":
+            if self.terminator != b"\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00", self.terminator, self._io, u"/types/string/seq/2")
 
 

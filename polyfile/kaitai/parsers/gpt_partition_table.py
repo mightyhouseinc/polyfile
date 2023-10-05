@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class GptPartitionTable(KaitaiStruct):
     """
@@ -65,7 +67,7 @@ class GptPartitionTable(KaitaiStruct):
             self._debug['signature']['start'] = self._io.pos()
             self.signature = self._io.read_bytes(8)
             self._debug['signature']['end'] = self._io.pos()
-            if not self.signature == b"\x45\x46\x49\x20\x50\x41\x52\x54":
+            if self.signature != b"\x45\x46\x49\x20\x50\x41\x52\x54":
                 raise kaitaistruct.ValidationNotEqualError(b"\x45\x46\x49\x20\x50\x41\x52\x54", self.signature, self._io, u"/types/partition_header/seq/0")
             self._debug['revision']['start'] = self._io.pos()
             self.revision = self._io.read_u4le()
@@ -119,7 +121,7 @@ class GptPartitionTable(KaitaiStruct):
             self._raw__m_entries = [None] * (self.entries_count)
             self._m_entries = [None] * (self.entries_count)
             for i in range(self.entries_count):
-                if not 'arr' in self._debug['_m_entries']:
+                if 'arr' not in self._debug['_m_entries']:
                     self._debug['_m_entries']['arr'] = []
                 self._debug['_m_entries']['arr'].append({'start': io.pos()})
                 self._raw__m_entries[i] = io.read_bytes(self.entries_size)

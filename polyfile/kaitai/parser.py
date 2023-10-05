@@ -80,8 +80,7 @@ class Segment:
                 new_end = self.end + index_or_slice.stop
             else:
                 new_end = self.start + index_or_slice.stop
-            if new_start > self.end:
-                new_start = self.end
+            new_start = min(new_start, self.end)
             if new_end < new_start or new_end > self.end:
                 new_end = new_start
             return Segment(new_start, new_end)

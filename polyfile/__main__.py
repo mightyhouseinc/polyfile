@@ -36,24 +36,23 @@ class KeyboardInterruptHandler:
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, KeyboardInterrupt):
-            try:
-                sys.stdout.flush()
-                sys.stderr.flush()
-                sys.stderr.write("\n\nCaught keyboard interrupt.\n")
-                if not sys.stderr.isatty() or not sys.stdin.isatty():
-                    sys.exit(128 + 15)
-                while True:
-                    sys.stderr.write("Would you like PolyFile to output its current progress? [Yn] ")
-                    result = input()
-                    if not result or result.lower() == 'y':
-                        return True
-                    elif result and result.lower() == 'n':
-                        sys.exit(0)
-            except KeyboardInterrupt:
-                sys.exit(128 + signal.SIGINT)
-        else:
+        if not isinstance(exc_val, KeyboardInterrupt):
             return exc_type is None
+        try:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            sys.stderr.write("\n\nCaught keyboard interrupt.\n")
+            if not sys.stderr.isatty() or not sys.stdin.isatty():
+                sys.exit(128 + 15)
+            while True:
+                sys.stderr.write("Would you like PolyFile to output its current progress? [Yn] ")
+                result = input()
+                if not result or result.lower() == 'y':
+                    return True
+                elif result and result.lower() == 'n':
+                    sys.exit(0)
+        except KeyboardInterrupt:
+            sys.exit(128 + signal.SIGINT)
 
 
 class FormatOutput:
@@ -285,7 +284,7 @@ equivalent to `--format mime`"""))
         exit(1)
         return  # this is here because linters are dumb and will complain about the next line without it
 
-    with path_or_stdin as file_path, ExitStack() as stack:
+    with (path_or_stdin as file_path, ExitStack() as stack):
         if args.debugger:
             debugger = Debugger(break_on_parsing=not args.no_debug_python)
             if args.eval_command:
@@ -372,7 +371,7 @@ equivalent to `--format mime`"""))
                         log.clear_status()
                     elif not output_format.output_to_stdout:
                         log.info(f"Saved MIME output to {output_format.output_path}")
-                elif output_format.output_format == "json" or output_format.output_format == "sbud":
+                elif output_format.output_format in ["json", "sbud"]:
                     assert needs_sbud
                     json.dump(sbud, output)
                     if not output_format.output_to_stdout:

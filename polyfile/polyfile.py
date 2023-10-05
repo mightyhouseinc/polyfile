@@ -104,10 +104,7 @@ class Match:
         if matcher is None:
             raise(ValueError("A Match must be initialized with `parent` and/or `matcher` not being None"))
         self.matcher = matcher
-        if display_name is None:
-            self.display_name: str = name
-        else:
-            self.display_name = display_name
+        self.display_name = name if display_name is None else display_name
         self.extension: Optional[str] = extension
         if extension is None:
             self.extension = guess_extension(self.name)
@@ -142,10 +139,7 @@ class Match:
 
     @property
     def root(self) -> "Match":
-        if self.parent is None:
-            return self
-        else:
-            return self.parent.root
+        return self if self.parent is None else self.parent.root
 
     @property
     def root_offset(self) -> int:
@@ -371,8 +365,7 @@ class Analyzer:
                 yield from self._magic_matches
             while True:
                 try:
-                    match = next(self._magic_match_iterator)
-                    yield match
+                    yield next(self._magic_match_iterator)
                 except StopIteration:
                     self._magic_match_iterator = None
                     break

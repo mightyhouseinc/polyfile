@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidDto(KaitaiStruct):
     """Format for Android DTB/DTBO partitions. It's kind of archive with
@@ -40,7 +42,7 @@ class AndroidDto(KaitaiStruct):
         self._debug['entries']['start'] = self._io.pos()
         self.entries = [None] * (self.header.dt_entry_count)
         for i in range(self.header.dt_entry_count):
-            if not 'arr' in self._debug['entries']:
+            if 'arr' not in self._debug['entries']:
                 self._debug['entries']['arr'] = []
             self._debug['entries']['arr'].append({'start': self._io.pos()})
             _t_entries = AndroidDto.DtTableEntry(self._io, self, self._root)
@@ -62,7 +64,7 @@ class AndroidDto(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\xD7\xB7\xAB\x1E":
+            if self.magic != b"\xD7\xB7\xAB\x1E":
                 raise kaitaistruct.ValidationNotEqualError(b"\xD7\xB7\xAB\x1E", self.magic, self._io, u"/types/dt_table_header/seq/0")
             self._debug['total_size']['start'] = self._io.pos()
             self.total_size = self._io.read_u4be()
@@ -111,7 +113,7 @@ class AndroidDto(KaitaiStruct):
             self._debug['custom']['start'] = self._io.pos()
             self.custom = [None] * (4)
             for i in range(4):
-                if not 'arr' in self._debug['custom']:
+                if 'arr' not in self._debug['custom']:
                     self._debug['custom']['arr'] = []
                 self._debug['custom']['arr'].append({'start': self._io.pos()})
                 self.custom[i] = self._io.read_u4be()

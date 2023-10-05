@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Gif(KaitaiStruct):
     """GIF (Graphics Interchange Format) is an image file format, developed
@@ -67,7 +69,7 @@ class Gif(KaitaiStruct):
         self.blocks = []
         i = 0
         while True:
-            if not 'arr' in self._debug['blocks']:
+            if 'arr' not in self._debug['blocks']:
                 self._debug['blocks']['arr'] = []
             self._debug['blocks']['arr'].append({'start': self._io.pos()})
             _t_blocks = Gif.Block(self._io, self, self._root)
@@ -278,7 +280,7 @@ class Gif(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Gif.ColorTableEntry(self._io, self, self._root)
@@ -306,7 +308,7 @@ class Gif(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(3)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x47\x49\x46":
+            if self.magic != b"\x47\x49\x46":
                 raise kaitaistruct.ValidationNotEqualError(b"\x47\x49\x46", self.magic, self._io, u"/types/header/seq/0")
             self._debug['version']['start'] = self._io.pos()
             self.version = (self._io.read_bytes(3)).decode(u"ASCII")
@@ -329,7 +331,7 @@ class Gif(KaitaiStruct):
             self._debug['block_size']['start'] = self._io.pos()
             self.block_size = self._io.read_bytes(1)
             self._debug['block_size']['end'] = self._io.pos()
-            if not self.block_size == b"\x04":
+            if self.block_size != b"\x04":
                 raise kaitaistruct.ValidationNotEqualError(b"\x04", self.block_size, self._io, u"/types/ext_graphic_control/seq/0")
             self._debug['flags']['start'] = self._io.pos()
             self.flags = self._io.read_u1()
@@ -343,7 +345,7 @@ class Gif(KaitaiStruct):
             self._debug['terminator']['start'] = self._io.pos()
             self.terminator = self._io.read_bytes(1)
             self._debug['terminator']['end'] = self._io.pos()
-            if not self.terminator == b"\x00":
+            if self.terminator != b"\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00", self.terminator, self._io, u"/types/ext_graphic_control/seq/4")
 
         @property
@@ -392,7 +394,7 @@ class Gif(KaitaiStruct):
             self._debug['len_bytes']['start'] = self._io.pos()
             self.len_bytes = self._io.read_u1()
             self._debug['len_bytes']['end'] = self._io.pos()
-            if not self.len_bytes == 11:
+            if self.len_bytes != 11:
                 raise kaitaistruct.ValidationNotEqualError(11, self.len_bytes, self._io, u"/types/application_id/seq/0")
             self._debug['application_identifier']['start'] = self._io.pos()
             self.application_identifier = (self._io.read_bytes(8)).decode(u"ASCII")
@@ -419,7 +421,7 @@ class Gif(KaitaiStruct):
             self.subblocks = []
             i = 0
             while True:
-                if not 'arr' in self._debug['subblocks']:
+                if 'arr' not in self._debug['subblocks']:
                     self._debug['subblocks']['arr'] = []
                 self._debug['subblocks']['arr'].append({'start': self._io.pos()})
                 _t_subblocks = Gif.Subblock(self._io, self, self._root)
@@ -446,7 +448,7 @@ class Gif(KaitaiStruct):
             self.entries = []
             i = 0
             while True:
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Gif.Subblock(self._io, self, self._root)
@@ -476,16 +478,14 @@ class Gif(KaitaiStruct):
             _on = self.label
             if _on == Gif.ExtensionLabel.application:
                 self.body = Gif.ExtApplication(self._io, self, self._root)
-                self.body._read()
-            elif _on == Gif.ExtensionLabel.comment:
+            elif (
+                _on == Gif.ExtensionLabel.comment
+                or _on != Gif.ExtensionLabel.graphic_control
+            ):
                 self.body = Gif.Subblocks(self._io, self, self._root)
-                self.body._read()
-            elif _on == Gif.ExtensionLabel.graphic_control:
-                self.body = Gif.ExtGraphicControl(self._io, self, self._root)
-                self.body._read()
             else:
-                self.body = Gif.Subblocks(self._io, self, self._root)
-                self.body._read()
+                self.body = Gif.ExtGraphicControl(self._io, self, self._root)
+            self.body._read()
             self._debug['body']['end'] = self._io.pos()
 
 

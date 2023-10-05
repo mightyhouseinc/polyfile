@@ -92,15 +92,13 @@ class StatusLogger(logging.getLoggerClass()):
             bar = f"{bar[:pct_pos]}{pct}{bar[pct_pos + len(pct):]}"
             msg = f"{msg}{bar} {item}/{size}{unit}"
             self.status(msg)
+
         if delay == 0.0:
             print_msg(0.0, 0)
         for i, obj in enumerate(iterable):
             current_time = time()
             elapsed_time = current_time - start_time
-            if size == 1:
-                new_percent = 1.0
-            else:
-                new_percent = i / (size - 1)
+            new_percent = 1.0 if size == 1 else i / (size - 1)
             if (elapsed_time >= delay and (
                     current_time - last_update_time >= update_interval or new_percent >= last_percent + 0.1
             )) or i == size - 1:

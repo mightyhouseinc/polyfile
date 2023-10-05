@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class ApmPartitionTable(KaitaiStruct):
     """
@@ -36,7 +38,7 @@ class ApmPartitionTable(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(2)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x50\x4D":
+            if self.magic != b"\x50\x4D":
                 raise kaitaistruct.ValidationNotEqualError(b"\x50\x4D", self.magic, self._io, u"/types/partition_entry/seq/0")
             self._debug['reserved_1']['start'] = self._io.pos()
             self.reserved_1 = self._io.read_bytes(2)
@@ -179,7 +181,7 @@ class ApmPartitionTable(KaitaiStruct):
         self._raw__m_partition_entries = [None] * (self._root.partition_lookup.number_of_partitions)
         self._m_partition_entries = [None] * (self._root.partition_lookup.number_of_partitions)
         for i in range(self._root.partition_lookup.number_of_partitions):
-            if not 'arr' in self._debug['_m_partition_entries']:
+            if 'arr' not in self._debug['_m_partition_entries']:
                 self._debug['_m_partition_entries']['arr'] = []
             self._debug['_m_partition_entries']['arr'].append({'start': io.pos()})
             self._raw__m_partition_entries[i] = io.read_bytes(self.sector_size)

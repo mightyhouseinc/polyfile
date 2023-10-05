@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DsStore(KaitaiStruct):
     """Apple macOS '.DS_Store' file format.
@@ -34,7 +36,7 @@ class DsStore(KaitaiStruct):
         self._debug['alignment_header']['start'] = self._io.pos()
         self.alignment_header = self._io.read_bytes(4)
         self._debug['alignment_header']['end'] = self._io.pos()
-        if not self.alignment_header == b"\x00\x00\x00\x01":
+        if self.alignment_header != b"\x00\x00\x00\x01":
             raise kaitaistruct.ValidationNotEqualError(b"\x00\x00\x00\x01", self.alignment_header, self._io, u"/seq/0")
         self._debug['buddy_allocator_header']['start'] = self._io.pos()
         self.buddy_allocator_header = DsStore.BuddyAllocatorHeader(self._io, self, self._root)
@@ -53,7 +55,7 @@ class DsStore(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x42\x75\x64\x31":
+            if self.magic != b"\x42\x75\x64\x31":
                 raise kaitaistruct.ValidationNotEqualError(b"\x42\x75\x64\x31", self.magic, self._io, u"/types/buddy_allocator_header/seq/0")
             self._debug['ofs_bookkeeping_info_block']['start'] = self._io.pos()
             self.ofs_bookkeeping_info_block = self._io.read_u4be()
@@ -87,7 +89,7 @@ class DsStore(KaitaiStruct):
             self._debug['block_addresses']['start'] = self._io.pos()
             self.block_addresses = [None] * (self.num_block_addresses)
             for i in range(self.num_block_addresses):
-                if not 'arr' in self._debug['block_addresses']:
+                if 'arr' not in self._debug['block_addresses']:
                     self._debug['block_addresses']['arr'] = []
                 self._debug['block_addresses']['arr'].append({'start': self._io.pos()})
                 _t_block_addresses = DsStore.BuddyAllocatorBody.BlockDescriptor(self._io, self, self._root)
@@ -102,7 +104,7 @@ class DsStore(KaitaiStruct):
             self._debug['directory_entries']['start'] = self._io.pos()
             self.directory_entries = [None] * (self.num_directories)
             for i in range(self.num_directories):
-                if not 'arr' in self._debug['directory_entries']:
+                if 'arr' not in self._debug['directory_entries']:
                     self._debug['directory_entries']['arr'] = []
                 self._debug['directory_entries']['arr'].append({'start': self._io.pos()})
                 _t_directory_entries = DsStore.BuddyAllocatorBody.DirectoryEntry(self._io, self, self._root)
@@ -114,7 +116,7 @@ class DsStore(KaitaiStruct):
             self._debug['free_lists']['start'] = self._io.pos()
             self.free_lists = [None] * (self.num_free_lists)
             for i in range(self.num_free_lists):
-                if not 'arr' in self._debug['free_lists']:
+                if 'arr' not in self._debug['free_lists']:
                     self._debug['free_lists']['arr'] = []
                 self._debug['free_lists']['arr'].append({'start': self._io.pos()})
                 _t_free_lists = DsStore.BuddyAllocatorBody.FreeList(self._io, self, self._root)
@@ -189,7 +191,7 @@ class DsStore(KaitaiStruct):
                 self._debug['offsets']['start'] = self._io.pos()
                 self.offsets = [None] * (self.counter)
                 for i in range(self.counter):
-                    if not 'arr' in self._debug['offsets']:
+                    if 'arr' not in self._debug['offsets']:
                         self._debug['offsets']['arr'] = []
                     self._debug['offsets']['arr'].append({'start': self._io.pos()})
                     self.offsets[i] = self._io.read_u4be()
@@ -224,7 +226,7 @@ class DsStore(KaitaiStruct):
             self._debug['_m_directories']['start'] = io.pos()
             self._m_directories = [None] * (self.num_directories)
             for i in range(self.num_directories):
-                if not 'arr' in self._debug['_m_directories']:
+                if 'arr' not in self._debug['_m_directories']:
                     self._debug['_m_directories']['arr'] = []
                 self._debug['_m_directories']['arr'].append({'start': io.pos()})
                 _t__m_directories = DsStore.MasterBlockRef(i, io, self, self._root)
@@ -324,7 +326,7 @@ class DsStore(KaitaiStruct):
             self._debug['data']['start'] = self._io.pos()
             self.data = [None] * (self.counter)
             for i in range(self.counter):
-                if not 'arr' in self._debug['data']:
+                if 'arr' not in self._debug['data']:
                     self._debug['data']['arr'] = []
                 self._debug['data']['arr'].append({'start': self._io.pos()})
                 _t_data = DsStore.Block.BlockData(self.mode, self._io, self, self._root)

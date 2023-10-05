@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class GranTurismoVol(KaitaiStruct):
     SEQ_FIELDS = ["magic", "num_files", "num_entries", "reserved", "offsets"]
@@ -21,7 +23,7 @@ class GranTurismoVol(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(8)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x47\x54\x46\x53\x00\x00\x00\x00":
+        if self.magic != b"\x47\x54\x46\x53\x00\x00\x00\x00":
             raise kaitaistruct.ValidationNotEqualError(b"\x47\x54\x46\x53\x00\x00\x00\x00", self.magic, self._io, u"/seq/0")
         self._debug['num_files']['start'] = self._io.pos()
         self.num_files = self._io.read_u2le()
@@ -32,12 +34,12 @@ class GranTurismoVol(KaitaiStruct):
         self._debug['reserved']['start'] = self._io.pos()
         self.reserved = self._io.read_bytes(4)
         self._debug['reserved']['end'] = self._io.pos()
-        if not self.reserved == b"\x00\x00\x00\x00":
+        if self.reserved != b"\x00\x00\x00\x00":
             raise kaitaistruct.ValidationNotEqualError(b"\x00\x00\x00\x00", self.reserved, self._io, u"/seq/3")
         self._debug['offsets']['start'] = self._io.pos()
         self.offsets = [None] * (self.num_files)
         for i in range(self.num_files):
-            if not 'arr' in self._debug['offsets']:
+            if 'arr' not in self._debug['offsets']:
                 self._debug['offsets']['arr'] = []
             self._debug['offsets']['arr'].append({'start': self._io.pos()})
             self.offsets[i] = self._io.read_u4le()
@@ -125,7 +127,7 @@ class GranTurismoVol(KaitaiStruct):
         self._debug['_m_files']['start'] = self._io.pos()
         self._m_files = [None] * (self._root.num_entries)
         for i in range(self._root.num_entries):
-            if not 'arr' in self._debug['_m_files']:
+            if 'arr' not in self._debug['_m_files']:
                 self._debug['_m_files']['arr'] = []
             self._debug['_m_files']['arr'].append({'start': self._io.pos()})
             _t__m_files = GranTurismoVol.FileInfo(self._io, self, self._root)

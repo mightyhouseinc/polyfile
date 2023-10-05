@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class GimpBrush(KaitaiStruct):
     """GIMP brush format is native to the GIMP image editor for storing a brush or a texture.
@@ -59,21 +61,21 @@ class GimpBrush(KaitaiStruct):
             self._debug['version']['start'] = self._io.pos()
             self.version = self._io.read_u4be()
             self._debug['version']['end'] = self._io.pos()
-            if not self.version == 2:
+            if self.version != 2:
                 raise kaitaistruct.ValidationNotEqualError(2, self.version, self._io, u"/types/header/seq/0")
             self._debug['width']['start'] = self._io.pos()
             self.width = self._io.read_u4be()
             self._debug['width']['end'] = self._io.pos()
-            if not self.width >= 1:
+            if self.width < 1:
                 raise kaitaistruct.ValidationLessThanError(1, self.width, self._io, u"/types/header/seq/1")
-            if not self.width <= 10000:
+            if self.width > 10000:
                 raise kaitaistruct.ValidationGreaterThanError(10000, self.width, self._io, u"/types/header/seq/1")
             self._debug['height']['start'] = self._io.pos()
             self.height = self._io.read_u4be()
             self._debug['height']['end'] = self._io.pos()
-            if not self.height >= 1:
+            if self.height < 1:
                 raise kaitaistruct.ValidationLessThanError(1, self.height, self._io, u"/types/header/seq/2")
-            if not self.height <= 10000:
+            if self.height > 10000:
                 raise kaitaistruct.ValidationGreaterThanError(10000, self.height, self._io, u"/types/header/seq/2")
             self._debug['bytes_per_pixel']['start'] = self._io.pos()
             self.bytes_per_pixel = KaitaiStream.resolve_enum(GimpBrush.ColorDepth, self._io.read_u4be())
@@ -81,7 +83,7 @@ class GimpBrush(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x47\x49\x4D\x50":
+            if self.magic != b"\x47\x49\x4D\x50":
                 raise kaitaistruct.ValidationNotEqualError(b"\x47\x49\x4D\x50", self.magic, self._io, u"/types/header/seq/4")
             self._debug['spacing']['start'] = self._io.pos()
             self.spacing = self._io.read_u4be()
@@ -103,7 +105,7 @@ class GimpBrush(KaitaiStruct):
             self._debug['rows']['start'] = self._io.pos()
             self.rows = [None] * (self._root.header.height)
             for i in range(self._root.header.height):
-                if not 'arr' in self._debug['rows']:
+                if 'arr' not in self._debug['rows']:
                     self._debug['rows']['arr'] = []
                 self._debug['rows']['arr'].append({'start': self._io.pos()})
                 _t_rows = GimpBrush.Row(self._io, self, self._root)
@@ -126,12 +128,12 @@ class GimpBrush(KaitaiStruct):
             self._debug['pixels']['start'] = self._io.pos()
             self.pixels = [None] * (self._root.header.width)
             for i in range(self._root.header.width):
-                if not 'arr' in self._debug['pixels']:
+                if 'arr' not in self._debug['pixels']:
                     self._debug['pixels']['arr'] = []
                 self._debug['pixels']['arr'].append({'start': self._io.pos()})
                 _on = self._root.header.bytes_per_pixel
                 if _on == GimpBrush.ColorDepth.grayscale:
-                    if not 'arr' in self._debug['pixels']:
+                    if 'arr' not in self._debug['pixels']:
                         self._debug['pixels']['arr'] = []
                     self._debug['pixels']['arr'].append({'start': self._io.pos()})
                     _t_pixels = GimpBrush.Row.PixelGray(self._io, self, self._root)
@@ -139,7 +141,7 @@ class GimpBrush(KaitaiStruct):
                     self.pixels[i] = _t_pixels
                     self._debug['pixels']['arr'][i]['end'] = self._io.pos()
                 elif _on == GimpBrush.ColorDepth.rgba:
-                    if not 'arr' in self._debug['pixels']:
+                    if 'arr' not in self._debug['pixels']:
                         self._debug['pixels']['arr'] = []
                     self._debug['pixels']['arr'].append({'start': self._io.pos()})
                     _t_pixels = GimpBrush.Row.PixelRgba(self._io, self, self._root)

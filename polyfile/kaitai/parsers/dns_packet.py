@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DnsPacket(KaitaiStruct):
     """(No support for Auth-Name + Add-Name for simplicity)
@@ -78,7 +80,7 @@ class DnsPacket(KaitaiStruct):
             self._debug['queries']['start'] = self._io.pos()
             self.queries = [None] * (self.qdcount)
             for i in range(self.qdcount):
-                if not 'arr' in self._debug['queries']:
+                if 'arr' not in self._debug['queries']:
                     self._debug['queries']['arr'] = []
                 self._debug['queries']['arr'].append({'start': self._io.pos()})
                 _t_queries = DnsPacket.Query(self._io, self, self._root)
@@ -92,7 +94,7 @@ class DnsPacket(KaitaiStruct):
             self._debug['answers']['start'] = self._io.pos()
             self.answers = [None] * (self.ancount)
             for i in range(self.ancount):
-                if not 'arr' in self._debug['answers']:
+                if 'arr' not in self._debug['answers']:
                     self._debug['answers']['arr'] = []
                 self._debug['answers']['arr'].append({'start': self._io.pos()})
                 _t_answers = DnsPacket.Answer(self._io, self, self._root)
@@ -106,7 +108,7 @@ class DnsPacket(KaitaiStruct):
             self._debug['authorities']['start'] = self._io.pos()
             self.authorities = [None] * (self.nscount)
             for i in range(self.nscount):
-                if not 'arr' in self._debug['authorities']:
+                if 'arr' not in self._debug['authorities']:
                     self._debug['authorities']['arr'] = []
                 self._debug['authorities']['arr'].append({'start': self._io.pos()})
                 _t_authorities = DnsPacket.Answer(self._io, self, self._root)
@@ -120,7 +122,7 @@ class DnsPacket(KaitaiStruct):
             self._debug['additionals']['start'] = self._io.pos()
             self.additionals = [None] * (self.arcount)
             for i in range(self.arcount):
-                if not 'arr' in self._debug['additionals']:
+                if 'arr' not in self._debug['additionals']:
                     self._debug['additionals']['arr'] = []
                 self._debug['additionals']['arr'].append({'start': self._io.pos()})
                 _t_additionals = DnsPacket.Answer(self._io, self, self._root)
@@ -245,7 +247,7 @@ class DnsPacket(KaitaiStruct):
             self.name = []
             i = 0
             while True:
-                if not 'arr' in self._debug['name']:
+                if 'arr' not in self._debug['name']:
                     self._debug['name']['arr'] = []
                 self._debug['name']['arr'].append({'start': self._io.pos()})
                 _t_name = DnsPacket.Label(self._io, self, self._root)
@@ -327,7 +329,7 @@ class DnsPacket(KaitaiStruct):
             self.data = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['data']:
+                if 'arr' not in self._debug['data']:
                     self._debug['data']['arr'] = []
                 self._debug['data']['arr'].append({'start': self._io.pos()})
                 _t_data = DnsPacket.Txt(self._io, self, self._root)
@@ -472,7 +474,7 @@ class DnsPacket(KaitaiStruct):
             if hasattr(self, '_m_is_opcode_valid'):
                 return self._m_is_opcode_valid if hasattr(self, '_m_is_opcode_valid') else None
 
-            self._m_is_opcode_valid =  ((self.opcode == 0) or (self.opcode == 1) or (self.opcode == 2)) 
+            self._m_is_opcode_valid = self.opcode in [0, 1, 2]
             return self._m_is_opcode_valid if hasattr(self, '_m_is_opcode_valid') else None
 
         @property

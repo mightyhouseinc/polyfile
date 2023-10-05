@@ -42,10 +42,10 @@ def load_trailer(self, parser: "PDFParser") -> None:
         finally:
             parser.auto_flush = flush_before
     except PSEOF:
-        x = parser.pop(1)
-        if not x:
+        if x := parser.pop(1):
+            (_, dic) = x[0]
+        else:
             raise PDFNoValidXRef('Unexpected EOF - file corrupted')
-        (_, dic) = x[0]
     self.trailer.update(dict_value(dic))
     log.debug('trailer=%r', self.trailer)
     return
@@ -160,18 +160,17 @@ class PSSequence(PSToken):
         if sep is None:
             remainder = remainder.strip()
         while remainder and (maxsplit < 0 or len(result) <= maxsplit):
-            c = remainder[0:1]
+            c = remainder[:1]
             remainder = remainder[1:]
             if sep is None:
-                if not c.strip():
-                    if current is not None:
-                        result.append(current)
-                        current = None
-                else:
+                if c.strip():
                     if current is None:
                         current = c
                     else:
                         current += c
+                elif current is not None:
+                    result.append(current)
+                    current = None
             else:
                 if current is None:
                     current = c
@@ -215,14 +214,8 @@ class PSSequence(PSToken):
             value = super().__getitem__(item)
             return make_ps_object(value, pdf_offset=self.pdf_offset+item, pdf_bytes=self.pdf_bytes-item)
         elif isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
-            if item.stop is None:
-                stop = self.pdf_bytes
-            else:
-                stop = item.stop
+            start = 0 if item.start is None else item.start
+            stop = self.pdf_bytes if item.stop is None else item.stop
             try:
                 return self.__class__(
                     super().__getitem__(item),
@@ -259,10 +252,7 @@ class PSBytes(PSSequence, bytes):
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            if item.start is None:
-                start = 0
-            else:
-                start = item.start
+            start = 0 if item.start is None else item.start
             return PSBytes(super().__getitem__(item), pdf_offset=self.pdf_offset + start)
         else:
             ret = super().__getitem__(item)
@@ -286,11 +276,10 @@ class PDFDeciphered(PSBytes):
         kwargs = dict(kwargs)
         if "pdf_bytes" not in kwargs:
             kwargs["pdf_bytes"] = len(args[0])
-        if "original_bytes" in kwargs:
-            original_bytes = kwargs["original_bytes"]
-            del kwargs["original_bytes"]
-        else:
+        if "original_bytes" not in kwargs:
             raise ValueError(f"{cls.__name__}.__init__ requires the `original_bytes` argument")
+        original_bytes = kwargs["original_bytes"]
+        del kwargs["original_bytes"]
         ret = super().__new__(cls, *args, **kwargs)
         setattr(ret, "original_bytes", original_bytes)
         return ret
@@ -502,20 +491,15 @@ class PDFStreamFilter(PSBytes):
         kwargs = dict(kwargs)
         if "pdf_bytes" not in kwargs:
             kwargs["pdf_bytes"] = len(args[0])
-        if "original_bytes" in kwargs:
-            original_bytes = kwargs["original_bytes"]
-            del kwargs["original_bytes"]
-        else:
+        if "original_bytes" not in kwargs:
             raise ValueError(f"{cls.__name__}.__init__ requires the `original_bytes` argument")
-        if "name" in kwargs:
-            name = kwargs["name"]
-            del kwargs["name"]
-        else:
+        original_bytes = kwargs["original_bytes"]
+        del kwargs["original_bytes"]
+        if "name" not in kwargs:
             raise ValueError(f"{cls.__name__}.__init__ requires the `name` argument")
-        if isinstance(args[0], DecodingError):
-            error = args[0]
-        else:
-            error = None
+        name = kwargs["name"]
+        del kwargs["name"]
+        error = args[0] if isinstance(args[0], DecodingError) else None
         ret = super().__new__(cls, *args, **kwargs)
         setattr(ret, "original_bytes", original_bytes)
         setattr(ret, "name", name)
@@ -531,16 +515,14 @@ class PNGPredictor(PSBytes):
         kwargs = dict(kwargs)
         if "pdf_bytes" not in kwargs:
             kwargs["pdf_bytes"] = len(args[0])
-        if "original_bytes" in kwargs:
-            original_bytes = kwargs["original_bytes"]
-            del kwargs["original_bytes"]
-        else:
+        if "original_bytes" not in kwargs:
             raise ValueError(f"{cls.__name__}.__init__ requires the `original_bytes` argument")
-        if "params" in kwargs:
-            params = kwargs["params"]
-            del kwargs["params"]
-        else:
+        original_bytes = kwargs["original_bytes"]
+        del kwargs["original_bytes"]
+        if "params" not in kwargs:
             raise ValueError(f"{cls.__name__}.__init__ requires the `params` argument")
+        params = kwargs["params"]
+        del kwargs["params"]
         ret = super().__new__(cls, *args, **kwargs)
         setattr(ret, "original_bytes", original_bytes)
         setattr(ret, "params", params)
@@ -583,7 +565,7 @@ class PDFObjectStream(PDFStream):
 
     def decode(self):
         assert self.data is None \
-               and self.rawdata is not None, str((self.data, self.rawdata))
+                   and self.rawdata is not None, str((self.data, self.rawdata))
         data = self.rawdata
         if self.decipher:
             # Handle encryption
@@ -626,10 +608,7 @@ class PDFObjectStream(PDFStream):
             else:
                 raise PDFNotImplementedError('Unsupported filter: %r' % f)
             if decoded is not None:
-                if isinstance(f, PDFLiteral):
-                    name = f.name
-                else:
-                    name = f
+                name = f.name if isinstance(f, PDFLiteral) else f
                 data = PDFStreamFilter(
                     decoded,
                     pdf_offset=data.pdf_offset,
@@ -643,7 +622,7 @@ class PDFObjectStream(PDFStream):
                 if pred == 1:
                     # no predictor
                     pass
-                elif 10 <= pred:
+                elif pred >= 10:
                     # PNG predictor
                     colors = int_value(params.get('Colors', 1))
                     columns = int_value(params.get('Columns', 1))
@@ -737,16 +716,8 @@ class PDFParser(PDFMinerParser):
         return super().push(*transformed)
 
     def _add_token(self, obj: PSBaseParserToken):
-        if hasattr(obj, "pdf_offset"):
-            pos = obj.pdf_offset
-        else:
-            pos = self._curtokenpos
-        if hasattr(obj, "pdf_bytes"):
-            length = obj.pdf_bytes
-        elif isinstance(obj, PSLiteral):
-            length = len(self._curtoken)
-        else:
-            length = len(self._curtoken)
+        pos = obj.pdf_offset if hasattr(obj, "pdf_offset") else self._curtokenpos
+        length = obj.pdf_bytes if hasattr(obj, "pdf_bytes") else len(self._curtoken)
         obj = make_ps_object(obj, pdf_offset=pos, pdf_bytes=length)
         # log.info(f"\n{self.token_context(obj)}")
         return super()._add_token(obj)
@@ -966,10 +937,7 @@ class InstrumentedPDFDocument(PDFDocument):
 
     @property
     def decipher(self) -> DecipherCallable:
-        if self._decipher is None:
-            return None
-        else:
-            return self.do_decipher
+        return None if self._decipher is None else self.do_decipher
 
     @decipher.setter
     def decipher(self, new_value: DecipherCallable):
@@ -1090,8 +1058,9 @@ def pdf_obj_parser(file_stream, obj, objid: int, parent: Match, pdf_header_offse
         if reverse_expect(file_stream, b"obj") and reverse_skip_whitespace(file_stream):
             version = reverse_expect(file_stream, lambda _, b: ord('0') <= b[0] <= ord('9'))
             if version and reverse_skip_whitespace(file_stream):
-                obj_id = reverse_expect(file_stream, lambda _, b: ord('0') <= b[0] <= ord('9'))
-                if obj_id:
+                if obj_id := reverse_expect(
+                    file_stream, lambda _, b: ord('0') <= b[0] <= ord('9')
+                ):
                     obj_offset = parent.offset + relative_offset - pdf_header_offset - file_stream.tell()
                     relative_offset -= obj_offset
                     obj_length += obj_offset
@@ -1164,9 +1133,9 @@ def pdf_parser(file_stream, parent: Match):
                 if (obj.objid, obj.genno) in yielded:
                     continue
                 yielded.add((obj.objid, obj.genno))
+            elif objid in yielded or not hasattr(obj, "pdf_offset") or not hasattr(obj, "pdf_bytes"):
+                continue
             else:
-                if objid in yielded or not hasattr(obj, "pdf_offset") or not hasattr(obj, "pdf_bytes"):
-                    continue
                 yielded.add(objid)
             yield from pdf_obj_parser(file_stream, obj, objid, parent, pdf_header_offset=pdf_header_offset)
 

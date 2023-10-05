@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 from polyfile.kaitai.parsers import dcmp_variable_length_integer
 class Dcmp1(KaitaiStruct):
@@ -51,7 +53,7 @@ class Dcmp1(KaitaiStruct):
         self.chunks = []
         i = 0
         while True:
-            if not 'arr' in self._debug['chunks']:
+            if 'arr' not in self._debug['chunks']:
                 self._debug['chunks']['arr'] = []
             self._debug['chunks']['arr'].append({'start': self._io.pos()})
             _t_chunks = Dcmp1.Chunk(self._io, self, self._root)

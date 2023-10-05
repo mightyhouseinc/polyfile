@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Cramfs(KaitaiStruct):
     SEQ_FIELDS = ["super_block"]
@@ -36,7 +38,7 @@ class Cramfs(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x45\x3D\xCD\x28":
+            if self.magic != b"\x45\x3D\xCD\x28":
                 raise kaitaistruct.ValidationNotEqualError(b"\x45\x3D\xCD\x28", self.magic, self._io, u"/types/super_block_struct/seq/0")
             self._debug['size']['start'] = self._io.pos()
             self.size = self._io.read_u4le()
@@ -50,7 +52,10 @@ class Cramfs(KaitaiStruct):
             self._debug['signature']['start'] = self._io.pos()
             self.signature = self._io.read_bytes(16)
             self._debug['signature']['end'] = self._io.pos()
-            if not self.signature == b"\x43\x6F\x6D\x70\x72\x65\x73\x73\x65\x64\x20\x52\x4F\x4D\x46\x53":
+            if (
+                self.signature
+                != b"\x43\x6F\x6D\x70\x72\x65\x73\x73\x65\x64\x20\x52\x4F\x4D\x46\x53"
+            ):
                 raise kaitaistruct.ValidationNotEqualError(b"\x43\x6F\x6D\x70\x72\x65\x73\x73\x65\x64\x20\x52\x4F\x4D\x46\x53", self.signature, self._io, u"/types/super_block_struct/seq/4")
             self._debug['fsid']['start'] = self._io.pos()
             self.fsid = Cramfs.Info(self._io, self, self._root)
@@ -117,7 +122,7 @@ class Cramfs(KaitaiStruct):
             self._debug['block_end_index']['start'] = self._io.pos()
             self.block_end_index = [None] * (((self._parent.size + self._root.page_size) - 1) // self._root.page_size)
             for i in range(((self._parent.size + self._root.page_size) - 1) // self._root.page_size):
-                if not 'arr' in self._debug['block_end_index']:
+                if 'arr' not in self._debug['block_end_index']:
                     self._debug['block_end_index']['arr'] = []
                 self._debug['block_end_index']['arr'].append({'start': self._io.pos()})
                 self.block_end_index[i] = self._io.read_u4le()
@@ -292,21 +297,22 @@ class Cramfs(KaitaiStruct):
             self._debug = collections.defaultdict(dict)
 
         def _read(self):
-            if self._io.size() > 0:
-                self._debug['children']['start'] = self._io.pos()
-                self.children = []
-                i = 0
-                while not self._io.is_eof():
-                    if not 'arr' in self._debug['children']:
-                        self._debug['children']['arr'] = []
-                    self._debug['children']['arr'].append({'start': self._io.pos()})
-                    _t_children = Cramfs.Inode(self._io, self, self._root)
-                    _t_children._read()
-                    self.children.append(_t_children)
-                    self._debug['children']['arr'][len(self.children) - 1]['end'] = self._io.pos()
-                    i += 1
+            if self._io.size() <= 0:
+                return
+            self._debug['children']['start'] = self._io.pos()
+            self.children = []
+            i = 0
+            while not self._io.is_eof():
+                if 'arr' not in self._debug['children']:
+                    self._debug['children']['arr'] = []
+                self._debug['children']['arr'].append({'start': self._io.pos()})
+                _t_children = Cramfs.Inode(self._io, self, self._root)
+                _t_children._read()
+                self.children.append(_t_children)
+                self._debug['children']['arr'][len(self.children) - 1]['end'] = self._io.pos()
+                i += 1
 
-                self._debug['children']['end'] = self._io.pos()
+            self._debug['children']['end'] = self._io.pos()
 
 
 

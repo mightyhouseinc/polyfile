@@ -188,9 +188,7 @@ class EncodeTypes(Enum):
 
     @staticmethod
     def get_by_id(encoding_id):
-        if encoding_id not in ENCODINGS_BY_ID:
-            return None
-        return ENCODINGS_BY_ID[encoding_id]
+        return ENCODINGS_BY_ID[encoding_id] if encoding_id in ENCODINGS_BY_ID else None
 
 
 class EncodingError(RuntimeError):

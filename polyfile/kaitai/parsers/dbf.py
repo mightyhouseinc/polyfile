@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Dbf(KaitaiStruct):
     """.dbf is a relational database format introduced in DOS database
@@ -45,13 +47,13 @@ class Dbf(KaitaiStruct):
         self._debug['header_terminator']['start'] = self._io.pos()
         self.header_terminator = self._io.read_bytes(1)
         self._debug['header_terminator']['end'] = self._io.pos()
-        if not self.header_terminator == b"\x0D":
+        if self.header_terminator != b"\x0D":
             raise kaitaistruct.ValidationNotEqualError(b"\x0D", self.header_terminator, self._io, u"/seq/2")
         self._debug['records']['start'] = self._io.pos()
         self._raw_records = [None] * (self.header1.num_records)
         self.records = [None] * (self.header1.num_records)
         for i in range(self.header1.num_records):
-            if not 'arr' in self._debug['records']:
+            if 'arr' not in self._debug['records']:
                 self._debug['records']['arr'] = []
             self._debug['records']['arr'].append({'start': self._io.pos()})
             self._raw_records[i] = self._io.read_bytes(self.header1.len_record)
@@ -88,7 +90,7 @@ class Dbf(KaitaiStruct):
             self.fields = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['fields']:
+                if 'arr' not in self._debug['fields']:
                     self._debug['fields']['arr'] = []
                 self._debug['fields']['arr'].append({'start': self._io.pos()})
                 _t_fields = Dbf.Field(self._io, self, self._root)
@@ -217,7 +219,7 @@ class Dbf(KaitaiStruct):
             self._debug['reserved1']['start'] = self._io.pos()
             self.reserved1 = self._io.read_bytes(2)
             self._debug['reserved1']['end'] = self._io.pos()
-            if not self.reserved1 == b"\x00\x00":
+            if self.reserved1 != b"\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00\x00", self.reserved1, self._io, u"/types/header_dbase_7/seq/0")
             self._debug['has_incomplete_transaction']['start'] = self._io.pos()
             self.has_incomplete_transaction = self._io.read_u1()
@@ -237,7 +239,7 @@ class Dbf(KaitaiStruct):
             self._debug['reserved3']['start'] = self._io.pos()
             self.reserved3 = self._io.read_bytes(2)
             self._debug['reserved3']['end'] = self._io.pos()
-            if not self.reserved3 == b"\x00\x00":
+            if self.reserved3 != b"\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00\x00", self.reserved3, self._io, u"/types/header_dbase_7/seq/6")
             self._debug['language_driver_name']['start'] = self._io.pos()
             self.language_driver_name = self._io.read_bytes(32)
@@ -262,7 +264,7 @@ class Dbf(KaitaiStruct):
             self._debug['record_fields']['start'] = self._io.pos()
             self.record_fields = [None] * (len(self._root.header2.fields))
             for i in range(len(self._root.header2.fields)):
-                if not 'arr' in self._debug['record_fields']:
+                if 'arr' not in self._debug['record_fields']:
                     self._debug['record_fields']['arr'] = []
                 self._debug['record_fields']['arr'].append({'start': self._io.pos()})
                 self.record_fields[i] = self._io.read_bytes(self._root.header2.fields[i].length)

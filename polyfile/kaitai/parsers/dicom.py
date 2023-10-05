@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Dicom(KaitaiStruct):
     """DICOM (Digital Imaging and Communications in Medicine), AKA NEMA
@@ -4066,7 +4068,7 @@ class Dicom(KaitaiStruct):
         self.elements = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['elements']:
+            if 'arr' not in self._debug['elements']:
                 self._debug['elements']['arr'] = []
             self._debug['elements']['arr'].append({'start': self._io.pos()})
             _t_elements = Dicom.TDataElementImplicit(self._io, self, self._root)
@@ -4092,7 +4094,7 @@ class Dicom(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x44\x49\x43\x4D":
+            if self.magic != b"\x44\x49\x43\x4D":
                 raise kaitaistruct.ValidationNotEqualError(b"\x44\x49\x43\x4D", self.magic, self._io, u"/types/t_file_header/seq/1")
 
 
@@ -4137,12 +4139,12 @@ class Dicom(KaitaiStruct):
                 self.value = self._io.read_bytes(self.value_len)
                 self._debug['value']['end'] = self._io.pos()
 
-            if  ((self.vr == u"SQ") and (self.value_len == 4294967295)) :
+            if ((self.vr == u"SQ") and (self.value_len == 4294967295)):
                 self._debug['items']['start'] = self._io.pos()
                 self.items = []
                 i = 0
                 while True:
-                    if not 'arr' in self._debug['items']:
+                    if 'arr' not in self._debug['items']:
                         self._debug['items']['arr'] = []
                     self._debug['items']['arr'].append({'start': self._io.pos()})
                     _t_items = Dicom.SeqItem(self._io, self, self._root)
@@ -4160,7 +4162,7 @@ class Dicom(KaitaiStruct):
                 self.elements_implicit = []
                 i = 0
                 while not self._io.is_eof():
-                    if not 'arr' in self._debug['elements_implicit']:
+                    if 'arr' not in self._debug['elements_implicit']:
                         self._debug['elements_implicit']['arr'] = []
                     self._debug['elements_implicit']['arr'].append({'start': self._io.pos()})
                     _t_elements_implicit = Dicom.TDataElementImplicit(self._io, self, self._root)
@@ -4246,12 +4248,12 @@ class Dicom(KaitaiStruct):
                 self.value = self._io.read_bytes(self.value_len)
                 self._debug['value']['end'] = self._io.pos()
 
-            if  ((self.vr == u"SQ") and (self.value_len == 4294967295)) :
+            if ((self.vr == u"SQ") and (self.value_len == 4294967295)):
                 self._debug['items']['start'] = self._io.pos()
                 self.items = []
                 i = 0
                 while True:
-                    if not 'arr' in self._debug['items']:
+                    if 'arr' not in self._debug['items']:
                         self._debug['items']['arr'] = []
                     self._debug['items']['arr'].append({'start': self._io.pos()})
                     _t_items = Dicom.SeqItem(self._io, self, self._root)
@@ -4269,7 +4271,7 @@ class Dicom(KaitaiStruct):
                 self.elements = []
                 i = 0
                 while not self._io.is_eof():
-                    if not 'arr' in self._debug['elements']:
+                    if 'arr' not in self._debug['elements']:
                         self._debug['elements']['arr'] = []
                     self._debug['elements']['arr'].append({'start': self._io.pos()})
                     _t_elements = Dicom.TDataElementExplicit(self._io, self, self._root)
@@ -4302,7 +4304,18 @@ class Dicom(KaitaiStruct):
             if hasattr(self, '_m_is_long_len'):
                 return self._m_is_long_len if hasattr(self, '_m_is_long_len') else None
 
-            self._m_is_long_len =  ((self.is_forced_explicit) and ( ((self.vr == u"OB") or (self.vr == u"OD") or (self.vr == u"OF") or (self.vr == u"OL") or (self.vr == u"OW") or (self.vr == u"SQ") or (self.vr == u"UC") or (self.vr == u"UR") or (self.vr == u"UT") or (self.vr == u"UN")) )) 
+            self._m_is_long_len = self.is_forced_explicit and self.vr in [
+                u"OB",
+                u"OD",
+                u"OF",
+                u"OL",
+                u"OW",
+                u"SQ",
+                u"UC",
+                u"UR",
+                u"UT",
+                u"UN",
+            ]
             return self._m_is_long_len if hasattr(self, '_m_is_long_len') else None
 
         @property
@@ -4334,7 +4347,7 @@ class Dicom(KaitaiStruct):
             self._debug['tag_group']['start'] = self._io.pos()
             self.tag_group = self._io.read_bytes(2)
             self._debug['tag_group']['end'] = self._io.pos()
-            if not self.tag_group == b"\xFE\xFF":
+            if self.tag_group != b"\xFE\xFF":
                 raise kaitaistruct.ValidationNotEqualError(b"\xFE\xFF", self.tag_group, self._io, u"/types/seq_item/seq/0")
             self._debug['tag_elem']['start'] = self._io.pos()
             self.tag_elem = self._io.read_u2le()
@@ -4352,7 +4365,7 @@ class Dicom(KaitaiStruct):
                 self.items = []
                 i = 0
                 while True:
-                    if not 'arr' in self._debug['items']:
+                    if 'arr' not in self._debug['items']:
                         self._debug['items']['arr'] = []
                     self._debug['items']['arr'].append({'start': self._io.pos()})
                     _t_items = Dicom.TDataElementExplicit(self._io, self, self._root)

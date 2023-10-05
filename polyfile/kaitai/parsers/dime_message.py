@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DimeMessage(KaitaiStruct):
     """Direct Internet Message Encapsulation (DIME)
@@ -51,7 +53,7 @@ class DimeMessage(KaitaiStruct):
         self.records = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['records']:
+            if 'arr' not in self._debug['records']:
                 self._debug['records']['arr'] = []
             self._debug['records']['arr'].append({'start': self._io.pos()})
             _t_records = DimeMessage.Record(self._io, self, self._root)
@@ -91,7 +93,7 @@ class DimeMessage(KaitaiStruct):
             self.option_elements = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['option_elements']:
+                if 'arr' not in self._debug['option_elements']:
                     self._debug['option_elements']['arr'] = []
                 self._debug['option_elements']['arr'].append({'start': self._io.pos()})
                 _t_option_elements = DimeMessage.OptionElement(self._io, self, self._root)

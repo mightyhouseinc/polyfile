@@ -14,7 +14,7 @@ def function_call(obj, function_name):
 def to_int(v, byteorder='big') -> int:
     if isinstance(v, int):
         return v
-    elif isinstance(v, bytes) or isinstance(v, str) or isinstance(v, bytearray):
+    elif isinstance(v, (bytes, str, bytearray)):
         if len(v) == 0:
             return 0
         elif len(v) == 1:
@@ -67,10 +67,7 @@ class Operator(Enum):
         self.left_associative = is_left_associative
         self.arity = arity
         self.multiple_arity = multiple_arity
-        if expand is None:
-            self.expand = (True,) * self.arity
-        else:
-            self.expand = expand
+        self.expand = (True,) * self.arity if expand is None else expand
         if not multiple_arity:
             OPERATORS_BY_NAME[self.token] = self
 
@@ -176,7 +173,7 @@ class Tokenizer:
         ret = None
         operand = None
         # ignore leading whitespace
-        while self._peek_byte() == ' ' or self._peek_byte() == '\t':
+        while self._peek_byte() in [' ', '\t']:
             self._pop_byte()
         while ret is None:
             c = self._peek_byte(3)
@@ -208,7 +205,7 @@ class Tokenizer:
                 ret = OpenParen()
             elif c[0] == ')':
                 ret = CloseParen()
-            elif c[0] == ' ' or c[0] == '\t':
+            elif c[0] in [' ', '\t']:
                 break
             else:
                 operand = self._pop_byte()
@@ -293,7 +290,7 @@ class Expression:
             if token.name not in assignments:
                 raise KeyError(f'Unknown identifier {token.name}')
             return assignments[token.name]
-        elif isinstance(token, int) or isinstance(token, str) or isinstance(token, bytes):
+        elif isinstance(token, (int, str, bytes)):
             return token
         else:
             raise ValueError(f"Unexpected token {token!r}")

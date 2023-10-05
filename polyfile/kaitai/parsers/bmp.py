@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Bmp(KaitaiStruct):
     """The **BMP file format**, also known as **bitmap image file** or **device independent
@@ -236,7 +238,10 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_has_profile'):
                 return self._m_has_profile if hasattr(self, '_m_has_profile') else None
 
-            self._m_has_profile =  ((self._parent.bitmap_v4_ext.color_space_type == Bmp.ColorSpace.profile_linked) or (self._parent.bitmap_v4_ext.color_space_type == Bmp.ColorSpace.profile_embedded)) 
+            self._m_has_profile = self._parent.bitmap_v4_ext.color_space_type in [
+                Bmp.ColorSpace.profile_linked,
+                Bmp.ColorSpace.profile_embedded,
+            ]
             return self._m_has_profile if hasattr(self, '_m_has_profile') else None
 
         @property
@@ -254,7 +259,7 @@ class Bmp(KaitaiStruct):
                 io.seek((14 + self.ofs_profile))
                 self._debug['_m_profile_data']['start'] = io.pos()
                 _on = self._parent.bitmap_v4_ext.color_space_type == Bmp.ColorSpace.profile_linked
-                if _on == True:
+                if _on:
                     self._m_profile_data = (KaitaiStream.bytes_terminate(io.read_bytes(self.len_profile), 0, False)).decode(u"windows-1252")
                 else:
                     self._m_profile_data = io.read_bytes(self.len_profile)
@@ -503,7 +508,16 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_uses_fixed_palette'):
                 return self._m_uses_fixed_palette if hasattr(self, '_m_uses_fixed_palette') else None
 
-            self._m_uses_fixed_palette =  ((not ( ((self.bits_per_pixel == 16) or (self.bits_per_pixel == 24) or (self.bits_per_pixel == 32)) )) and (not ( ((self.extends_bitmap_info) and (not (self.extends_os2_2x_bitmap)) and ( ((self.bitmap_info_ext.compression == Bmp.Compressions.jpeg) or (self.bitmap_info_ext.compression == Bmp.Compressions.png)) )) ))) 
+            self._m_uses_fixed_palette = self.bits_per_pixel not in [
+                16,
+                24,
+                32,
+            ] and not (
+                self.extends_bitmap_info
+                and not (self.extends_os2_2x_bitmap)
+                and self.bitmap_info_ext.compression
+                in [Bmp.Compressions.jpeg, Bmp.Compressions.png]
+            )
             return self._m_uses_fixed_palette if hasattr(self, '_m_uses_fixed_palette') else None
 
         @property
@@ -630,7 +644,7 @@ class Bmp(KaitaiStruct):
             self._debug['colors']['start'] = self._io.pos()
             self.colors = [None] * ((self.num_colors if  ((self.num_colors > 0) and (self.num_colors < self.num_colors_present))  else self.num_colors_present))
             for i in range((self.num_colors if  ((self.num_colors > 0) and (self.num_colors < self.num_colors_present))  else self.num_colors_present)):
-                if not 'arr' in self._debug['colors']:
+                if 'arr' not in self._debug['colors']:
                     self._debug['colors']['arr'] = []
                 self._debug['colors']['arr'].append({'start': self._io.pos()})
                 _t_colors = Bmp.RgbRecord(self.has_reserved_field, self._io, self, self._root)
@@ -665,7 +679,7 @@ class Bmp(KaitaiStruct):
             self._debug['file_type']['start'] = self._io.pos()
             self.file_type = self._io.read_bytes(2)
             self._debug['file_type']['end'] = self._io.pos()
-            if not self.file_type == b"\x42\x4D":
+            if self.file_type != b"\x42\x4D":
                 raise kaitaistruct.ValidationNotEqualError(b"\x42\x4D", self.file_type, self._io, u"/types/file_header/seq/0")
             self._debug['len_file']['start'] = self._io.pos()
             self.len_file = self._io.read_u4le()
@@ -723,7 +737,12 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_is_color_mask_given'):
                 return self._m_is_color_mask_given if hasattr(self, '_m_is_color_mask_given') else None
 
-            self._m_is_color_mask_given =  ((self.header.extends_bitmap_info) and ( ((self.header.bitmap_info_ext.compression == Bmp.Compressions.bitfields) or (self.header.bitmap_info_ext.compression == Bmp.Compressions.alpha_bitfields)) ) and ( ((self.is_color_mask_here) or (self.header.is_color_mask_here)) )) 
+            self._m_is_color_mask_given = (
+                self.header.extends_bitmap_info
+                and self.header.bitmap_info_ext.compression
+                in [Bmp.Compressions.bitfields, Bmp.Compressions.alpha_bitfields]
+                and (((self.is_color_mask_here) or (self.header.is_color_mask_here)))
+            )
             return self._m_is_color_mask_given if hasattr(self, '_m_is_color_mask_given') else None
 
         @property
@@ -741,7 +760,15 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_color_mask_blue'):
                 return self._m_color_mask_blue if hasattr(self, '_m_color_mask_blue') else None
 
-            self._m_color_mask_blue = (self.color_mask_given.blue_mask if self.is_color_mask_given else (31 if self.header.bits_per_pixel == 16 else (255 if  ((self.header.bits_per_pixel == 24) or (self.header.bits_per_pixel == 32))  else 0)))
+            self._m_color_mask_blue = (
+                self.color_mask_given.blue_mask
+                if self.is_color_mask_given
+                else 31
+                if self.header.bits_per_pixel == 16
+                else 255
+                if self.header.bits_per_pixel in [24, 32]
+                else 0
+            )
             return self._m_color_mask_blue if hasattr(self, '_m_color_mask_blue') else None
 
         @property
@@ -757,7 +784,15 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_color_mask_green'):
                 return self._m_color_mask_green if hasattr(self, '_m_color_mask_green') else None
 
-            self._m_color_mask_green = (self.color_mask_given.green_mask if self.is_color_mask_given else (992 if self.header.bits_per_pixel == 16 else (65280 if  ((self.header.bits_per_pixel == 24) or (self.header.bits_per_pixel == 32))  else 0)))
+            self._m_color_mask_green = (
+                self.color_mask_given.green_mask
+                if self.is_color_mask_given
+                else 992
+                if self.header.bits_per_pixel == 16
+                else 65280
+                if self.header.bits_per_pixel in [24, 32]
+                else 0
+            )
             return self._m_color_mask_green if hasattr(self, '_m_color_mask_green') else None
 
         @property
@@ -765,7 +800,12 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_is_color_mask_here'):
                 return self._m_is_color_mask_here if hasattr(self, '_m_is_color_mask_here') else None
 
-            self._m_is_color_mask_here =  ((not (self._io.is_eof())) and (self.header.len_header == Bmp.HeaderType.bitmap_info_header.value) and ( ((self.header.bitmap_info_ext.compression == Bmp.Compressions.bitfields) or (self.header.bitmap_info_ext.compression == Bmp.Compressions.alpha_bitfields)) )) 
+            self._m_is_color_mask_here = (
+                not (self._io.is_eof())
+                and self.header.len_header == Bmp.HeaderType.bitmap_info_header.value
+                and self.header.bitmap_info_ext.compression
+                in [Bmp.Compressions.bitfields, Bmp.Compressions.alpha_bitfields]
+            )
             return self._m_is_color_mask_here if hasattr(self, '_m_is_color_mask_here') else None
 
         @property
@@ -773,7 +813,15 @@ class Bmp(KaitaiStruct):
             if hasattr(self, '_m_color_mask_red'):
                 return self._m_color_mask_red if hasattr(self, '_m_color_mask_red') else None
 
-            self._m_color_mask_red = (self.color_mask_given.red_mask if self.is_color_mask_given else (31744 if self.header.bits_per_pixel == 16 else (16711680 if  ((self.header.bits_per_pixel == 24) or (self.header.bits_per_pixel == 32))  else 0)))
+            self._m_color_mask_red = (
+                self.color_mask_given.red_mask
+                if self.is_color_mask_given
+                else 31744
+                if self.header.bits_per_pixel == 16
+                else 16711680
+                if self.header.bits_per_pixel in [24, 32]
+                else 0
+            )
             return self._m_color_mask_red if hasattr(self, '_m_color_mask_red') else None
 
 

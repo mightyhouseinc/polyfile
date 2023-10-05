@@ -192,10 +192,7 @@ def _write_history(repl: "REPL"):
 def command(help: str, name: str = "", aliases: Iterable[str] = (), allows_abbreviation: bool = False,
             completer: Optional[Callable[["Command", str, int, int], List[str]]] = None):
     def wrapper(func):
-        if not name:
-            func_name = func.__name__
-        else:
-            func_name = name
+        func_name = func.__name__ if not name else name
         setattr(func, "command_info", CommandInfo(
             name=func_name, help=help, aliases=aliases, allows_abbreviation=allows_abbreviation, completer=completer
         ))
@@ -255,15 +252,17 @@ class REPLMeta(type):
     _commands: Dict[str, Type[Command]]
     _completers: Dict[str, Callable[["REPL", str, int, int], List[str]]]
 
-    def add_command(cls, name: str, command: Type[Command]):
-        if name in cls._commands:
-            raise ValueError(f"A command named {name} is already registered to {cls}")
-        cls._commands[name] = command
+    def add_command(self, name: str, command: Type[Command]):
+        if name in self._commands:
+            raise ValueError(f"A command named {name} is already registered to {self}")
+        self._commands[name] = command
 
-    def add_completer(cls, for_command_name: str, completer: Callable[["REPL", str, int, int], List[str]]):
-        if for_command_name in cls._completers:
-            raise ValueError(f"A completer for command {for_command_name} is already registered to {cls}")
-        cls._completers[for_command_name] = completer
+    def add_completer(self, for_command_name: str, completer: Callable[["REPL", str, int, int], List[str]]):
+        if for_command_name in self._completers:
+            raise ValueError(
+                f"A completer for command {for_command_name} is already registered to {self}"
+            )
+        self._completers[for_command_name] = completer
 
     @property
     def command_types(self) -> Iterator[Tuple[str, Type[Command]]]:
@@ -350,22 +349,22 @@ class REPL(metaclass=REPLMeta):
             yield from cmd.aliases
 
     def get_completer(self, for_command: Command) -> Callable[[str, int, int], List[str]]:
-        for cmd_name, cmd_completer in self.__class__.completers:
-            if cmd_name == for_command.name:
-                return partial(cmd_completer, self)  # type: ignore
-        return for_command.complete
+        return next(
+            (
+                partial(cmd_completer, self)
+                for cmd_name, cmd_completer in self.__class__.completers
+                if cmd_name == for_command.name
+            ),
+            for_command.complete,
+        )
 
     @arg_completer(for_command="help")
     def help_completer(self, index: int, arg: str, prev_arguments: Iterable[str]):
-        if index == 0:
-            return SetCompleter(self.command_names)(arg)
-        else:
-            return []
+        return SetCompleter(self.command_names)(arg) if index == 0 else []
 
     @command(help="print this message", allows_abbreviation=True)
     def help(self, arguments: str):
-        arguments = arguments.strip()
-        if arguments:
+        if arguments := arguments.strip():
             if arguments not in self.commands:
                 self.write(f"Undefined command: {arguments!r}. Try \"help\".\n", color=ANSIColor.RED)
             else:
@@ -439,7 +438,7 @@ class REPL(metaclass=REPLMeta):
         try:
             readline.read_history_file(str(HISTORY_PATH))
             self._prev_history_length = readline.get_current_history_length()
-        except (FileNotFoundError, OSError):
+        except OSError:
             open(HISTORY_PATH, 'wb').close()
             self._prev_history_length = 0
         # default history len is -1 (infinite), which may grow unruly
@@ -560,12 +559,10 @@ class REPLCompleter:
         self.repl: REPL = repl
 
     def traverse(self, tokens, tree):
-        if tree is None:
-            return []
-        elif len(tokens) == 0:
+        if tree is None or len(tokens) == 0:
             return []
         if len(tokens) == 1:
-            return [x+' ' for x in tree if x.startswith(tokens[0])]
+            return [f'{x} ' for x in tree if x.startswith(tokens[0])]
         elif tokens[0] in tree.keys():
             return self.traverse(tokens[1:],tree[tokens[0]])
         return []
@@ -584,13 +581,12 @@ class REPLCompleter:
                 for alias in cmd.aliases
                 if alias.startswith(text)
             }) + [None]
-            if state < len(possible_names):
-                if state == 0 and len(possible_names) == 2:
-                    # there is only one possibility, so append it with a space since it is the only choice
-                    return f"{possible_names[0]} "
-                return possible_names[state]
-            else:
+            if state >= len(possible_names):
                 return None
+            if state == 0 and len(possible_names) == 2:
+                # there is only one possibility, so append it with a space since it is the only choice
+                return f"{possible_names[0]} "
+            return possible_names[state]
         if space_index > 0:
             command_name, args = commandline[:space_index], commandline[space_index + 1:]
         else:
@@ -613,12 +609,12 @@ class REPLCompleter:
             return None
 
         if state < len(possibilities):
-            if state == 0 and len(possibilities) == 2:
-                # there is only one possibility, so append it with a space since it is the only choice
-                return f"{possibilities[0]} "
-            return possibilities[state]
-        else:
-            log.warning(f"Command {command.__class__.__name__}.complete({args!r}, "
-                        f"{readline.get_begidx() - space_index - 1}, {readline.get_endidx() - space_index - 1}) "
-                        f"returned an invalid result: {possibilities[:-1]!r}")
-            return None
+            return (
+                f"{possibilities[0]} "
+                if state == 0 and len(possibilities) == 2
+                else possibilities[state]
+            )
+        log.warning(f"Command {command.__class__.__name__}.complete({args!r}, "
+                    f"{readline.get_begidx() - space_index - 1}, {readline.get_endidx() - space_index - 1}) "
+                    f"returned an invalid result: {possibilities[:-1]!r}")
+        return None

@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class BtrfsStream(KaitaiStruct):
     """Btrfs is a copy on write file system based on B-trees focusing on fault tolerance, repair and easy
@@ -92,7 +94,7 @@ class BtrfsStream(KaitaiStruct):
         self.commands = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['commands']:
+            if 'arr' not in self._debug['commands']:
                 self._debug['commands']['arr'] = []
             self._debug['commands']['arr'].append({'start': self._io.pos()})
             _t_commands = BtrfsStream.SendCommand(self._io, self, self._root)
@@ -115,7 +117,7 @@ class BtrfsStream(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(13)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x62\x74\x72\x66\x73\x2D\x73\x74\x72\x65\x61\x6D\x00":
+            if self.magic != b"\x62\x74\x72\x66\x73\x2D\x73\x74\x72\x65\x61\x6D\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x62\x74\x72\x66\x73\x2D\x73\x74\x72\x65\x61\x6D\x00", self.magic, self._io, u"/types/send_stream_header/seq/0")
             self._debug['version']['start'] = self._io.pos()
             self.version = self._io.read_u4le()
@@ -271,7 +273,7 @@ class BtrfsStream(KaitaiStruct):
                 self.tlv = []
                 i = 0
                 while not self._io.is_eof():
-                    if not 'arr' in self._debug['tlv']:
+                    if 'arr' not in self._debug['tlv']:
                         self._debug['tlv']['arr'] = []
                     self._debug['tlv']['arr'].append({'start': self._io.pos()})
                     _t_tlv = BtrfsStream.SendCommand.Tlv(self._io, self, self._root)

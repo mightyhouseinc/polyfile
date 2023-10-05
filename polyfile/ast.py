@@ -23,9 +23,7 @@ class Node:
         r = f"{self.__class__.__name__}(name={self.name!r}"
         if self.value is not None:
             r = f"{r}, value={self.value!r}"
-        r = f"{r}, offset={self.offset!r}, length={self.length!r}, older_sibling={self.older_sibling!r}, " \
-            f"children={self.children!r})"
-        return r
+        return f"{r}, offset={self.offset!r}, length={self.length!r}, older_sibling={self.older_sibling!r}, children={self.children!r})"
 
     @property
     def offset(self) -> int:
@@ -53,10 +51,7 @@ class Node:
         stack: List[Tuple["Node", Optional[Match]]] = [(self, parent)]
         while stack:
             node, parent = stack.pop()
-            if parent is None:
-                parent_offset = 0
-            else:
-                parent_offset = parent.offset
+            parent_offset = 0 if parent is None else parent.offset
             match = Submatch(
                 name=node.name,
                 match_obj=node.value,
@@ -65,8 +60,7 @@ class Node:
                 parent=parent
             )
             yield match
-            for child in reversed(node.children):
-                stack.append((child, match))
+            stack.extend((child, match) for child in reversed(node.children))
 
     @classmethod
     def load(cls, obj: Any) -> "Node":
@@ -85,16 +79,10 @@ class Node:
             if not hasattr(obj, "name"):
                 raise ValueError(f"{obj!r} does not have a `name` attribute!")
             name: str = obj.name
-            if hasattr(obj, "value"):
-                value: Union[Optional[bytes], str] = obj.value
-            else:
-                value = None
+            value = obj.value if hasattr(obj, "value") else None
             if isinstance(value, str):
                 value = value.encode("utf-8")
-            if hasattr(obj, "offset"):
-                offset: Optional[int] = obj.offset
-            else:
-                offset = None
+            offset = obj.offset if hasattr(obj, "offset") else None
             if hasattr(obj, "length") and (value is None or obj.length >= len(value)):
                 length: Optional[int] = obj.length
             else:

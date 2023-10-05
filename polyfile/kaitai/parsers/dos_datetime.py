@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DosDatetime(KaitaiStruct):
     """MS-DOS date and time are packed 16-bit values that specify local date/time.
@@ -83,17 +85,17 @@ class DosDatetime(KaitaiStruct):
             self._debug['second_div_2']['start'] = self._io.pos()
             self.second_div_2 = self._io.read_bits_int_le(5)
             self._debug['second_div_2']['end'] = self._io.pos()
-            if not self.second_div_2 <= 29:
+            if self.second_div_2 > 29:
                 raise kaitaistruct.ValidationGreaterThanError(29, self.second_div_2, self._io, u"/types/time/seq/0")
             self._debug['minute']['start'] = self._io.pos()
             self.minute = self._io.read_bits_int_le(6)
             self._debug['minute']['end'] = self._io.pos()
-            if not self.minute <= 59:
+            if self.minute > 59:
                 raise kaitaistruct.ValidationGreaterThanError(59, self.minute, self._io, u"/types/time/seq/1")
             self._debug['hour']['start'] = self._io.pos()
             self.hour = self._io.read_bits_int_le(5)
             self._debug['hour']['end'] = self._io.pos()
-            if not self.hour <= 23:
+            if self.hour > 23:
                 raise kaitaistruct.ValidationGreaterThanError(23, self.hour, self._io, u"/types/time/seq/2")
 
         @property
@@ -141,14 +143,14 @@ class DosDatetime(KaitaiStruct):
             self._debug['day']['start'] = self._io.pos()
             self.day = self._io.read_bits_int_le(5)
             self._debug['day']['end'] = self._io.pos()
-            if not self.day >= 1:
+            if self.day < 1:
                 raise kaitaistruct.ValidationLessThanError(1, self.day, self._io, u"/types/date/seq/0")
             self._debug['month']['start'] = self._io.pos()
             self.month = self._io.read_bits_int_le(4)
             self._debug['month']['end'] = self._io.pos()
-            if not self.month >= 1:
+            if self.month < 1:
                 raise kaitaistruct.ValidationLessThanError(1, self.month, self._io, u"/types/date/seq/1")
-            if not self.month <= 12:
+            if self.month > 12:
                 raise kaitaistruct.ValidationGreaterThanError(12, self.month, self._io, u"/types/date/seq/1")
             self._debug['year_minus_1980']['start'] = self._io.pos()
             self.year_minus_1980 = self._io.read_bits_int_le(7)

@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Avi(KaitaiStruct):
     """
@@ -52,7 +54,7 @@ class Avi(KaitaiStruct):
         self._debug['magic1']['start'] = self._io.pos()
         self.magic1 = self._io.read_bytes(4)
         self._debug['magic1']['end'] = self._io.pos()
-        if not self.magic1 == b"\x52\x49\x46\x46":
+        if self.magic1 != b"\x52\x49\x46\x46":
             raise kaitaistruct.ValidationNotEqualError(b"\x52\x49\x46\x46", self.magic1, self._io, u"/seq/0")
         self._debug['file_size']['start'] = self._io.pos()
         self.file_size = self._io.read_u4le()
@@ -60,7 +62,7 @@ class Avi(KaitaiStruct):
         self._debug['magic2']['start'] = self._io.pos()
         self.magic2 = self._io.read_bytes(4)
         self._debug['magic2']['end'] = self._io.pos()
-        if not self.magic2 == b"\x41\x56\x49\x20":
+        if self.magic2 != b"\x41\x56\x49\x20":
             raise kaitaistruct.ValidationNotEqualError(b"\x41\x56\x49\x20", self.magic2, self._io, u"/seq/2")
         self._debug['data']['start'] = self._io.pos()
         self._raw_data = self._io.read_bytes((self.file_size - 4))
@@ -123,7 +125,7 @@ class Avi(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Avi.Block(self._io, self, self._root)

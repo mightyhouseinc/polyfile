@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidBootldrQcom(KaitaiStruct):
     """A bootloader for Android used on various devices powered by Qualcomm
@@ -128,7 +130,7 @@ class AndroidBootldrQcom(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(8)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x42\x4F\x4F\x54\x4C\x44\x52\x21":
+        if self.magic != b"\x42\x4F\x4F\x54\x4C\x44\x52\x21":
             raise kaitaistruct.ValidationNotEqualError(b"\x42\x4F\x4F\x54\x4C\x44\x52\x21", self.magic, self._io, u"/seq/0")
         self._debug['num_images']['start'] = self._io.pos()
         self.num_images = self._io.read_u4le()
@@ -142,7 +144,7 @@ class AndroidBootldrQcom(KaitaiStruct):
         self._debug['img_headers']['start'] = self._io.pos()
         self.img_headers = [None] * (self.num_images)
         for i in range(self.num_images):
-            if not 'arr' in self._debug['img_headers']:
+            if 'arr' not in self._debug['img_headers']:
                 self._debug['img_headers']['arr'] = []
             self._debug['img_headers']['arr'].append({'start': self._io.pos()})
             _t_img_headers = AndroidBootldrQcom.ImgHeader(self._io, self, self._root)
@@ -202,7 +204,7 @@ class AndroidBootldrQcom(KaitaiStruct):
         self._debug['_m_img_bodies']['start'] = self._io.pos()
         self._m_img_bodies = [None] * (self.num_images)
         for i in range(self.num_images):
-            if not 'arr' in self._debug['_m_img_bodies']:
+            if 'arr' not in self._debug['_m_img_bodies']:
                 self._debug['_m_img_bodies']['arr'] = []
             self._debug['_m_img_bodies']['arr'].append({'start': self._io.pos()})
             _t__m_img_bodies = AndroidBootldrQcom.ImgBody(i, self._io, self, self._root)

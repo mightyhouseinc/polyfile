@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class FtlDat(KaitaiStruct):
     SEQ_FIELDS = ["num_files", "files"]
@@ -24,7 +26,7 @@ class FtlDat(KaitaiStruct):
         self._debug['files']['start'] = self._io.pos()
         self.files = [None] * (self.num_files)
         for i in range(self.num_files):
-            if not 'arr' in self._debug['files']:
+            if 'arr' not in self._debug['files']:
                 self._debug['files']['arr'] = []
             self._debug['files']['arr'].append({'start': self._io.pos()})
             _t_files = FtlDat.File(self._io, self, self._root)

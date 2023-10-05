@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidBootldrAsus(KaitaiStruct):
     """A bootloader image which only seems to have been used on a few ASUS
@@ -31,12 +33,12 @@ class AndroidBootldrAsus(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(8)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x42\x4F\x4F\x54\x4C\x44\x52\x21":
+        if self.magic != b"\x42\x4F\x4F\x54\x4C\x44\x52\x21":
             raise kaitaistruct.ValidationNotEqualError(b"\x42\x4F\x4F\x54\x4C\x44\x52\x21", self.magic, self._io, u"/seq/0")
         self._debug['revision']['start'] = self._io.pos()
         self.revision = self._io.read_u2le()
         self._debug['revision']['end'] = self._io.pos()
-        if not self.revision >= 2:
+        if self.revision < 2:
             raise kaitaistruct.ValidationLessThanError(2, self.revision, self._io, u"/seq/1")
         self._debug['reserved1']['start'] = self._io.pos()
         self.reserved1 = self._io.read_u2le()
@@ -47,7 +49,7 @@ class AndroidBootldrAsus(KaitaiStruct):
         self._debug['images']['start'] = self._io.pos()
         self.images = [None] * (3)
         for i in range(3):
-            if not 'arr' in self._debug['images']:
+            if 'arr' not in self._debug['images']:
                 self._debug['images']['arr'] = []
             self._debug['images']['arr'].append({'start': self._io.pos()})
             _t_images = AndroidBootldrAsus.Image(self._io, self, self._root)
@@ -69,7 +71,7 @@ class AndroidBootldrAsus(KaitaiStruct):
             self._debug['chunk_id']['start'] = self._io.pos()
             self.chunk_id = (self._io.read_bytes(8)).decode(u"ASCII")
             self._debug['chunk_id']['end'] = self._io.pos()
-            if not  ((self.chunk_id == u"IFWI!!!!") or (self.chunk_id == u"DROIDBT!") or (self.chunk_id == u"SPLASHS!")) :
+            if self.chunk_id not in [u"IFWI!!!!", u"DROIDBT!", u"SPLASHS!"]:
                 raise kaitaistruct.ValidationNotAnyOfError(self.chunk_id, self._io, u"/types/image/seq/0")
             self._debug['len_body']['start'] = self._io.pos()
             self.len_body = self._io.read_u4le()
@@ -78,7 +80,7 @@ class AndroidBootldrAsus(KaitaiStruct):
             self.flags = self._io.read_u1()
             self._debug['flags']['end'] = self._io.pos()
             _ = self.flags
-            if not (_ & 1) != 0:
+            if _ & 1 == 0:
                 raise kaitaistruct.ValidationExprError(self.flags, self._io, u"/types/image/seq/2")
             self._debug['reserved1']['start'] = self._io.pos()
             self.reserved1 = self._io.read_u1()

@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class DoomWad(KaitaiStruct):
     SEQ_FIELDS = ["magic", "num_index_entries", "index_offset"]
@@ -42,7 +44,7 @@ class DoomWad(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = DoomWad.Sector(self._io, self, self._root)
@@ -95,7 +97,7 @@ class DoomWad(KaitaiStruct):
             self._debug['textures']['start'] = self._io.pos()
             self.textures = [None] * (self.num_textures)
             for i in range(self.num_textures):
-                if not 'arr' in self._debug['textures']:
+                if 'arr' not in self._debug['textures']:
                     self._debug['textures']['arr'] = []
                 self._debug['textures']['arr'].append({'start': self._io.pos()})
                 _t_textures = DoomWad.Texture12.TextureIndex(self._io, self, self._root)
@@ -163,7 +165,7 @@ class DoomWad(KaitaiStruct):
                 self._debug['patches']['start'] = self._io.pos()
                 self.patches = [None] * (self.num_patches)
                 for i in range(self.num_patches):
-                    if not 'arr' in self._debug['patches']:
+                    if 'arr' not in self._debug['patches']:
                         self._debug['patches']['arr'] = []
                     self._debug['patches']['arr'].append({'start': self._io.pos()})
                     _t_patches = DoomWad.Texture12.Patch(self._io, self, self._root)
@@ -252,7 +254,7 @@ class DoomWad(KaitaiStruct):
             self._debug['names']['start'] = self._io.pos()
             self.names = [None] * (self.num_patches)
             for i in range(self.num_patches):
-                if not 'arr' in self._debug['names']:
+                if 'arr' not in self._debug['names']:
                     self._debug['names']['arr'] = []
                 self._debug['names']['arr'].append({'start': self._io.pos()})
                 self.names[i] = (KaitaiStream.bytes_strip_right(self._io.read_bytes(8), 0)).decode(u"ASCII")
@@ -358,7 +360,7 @@ class DoomWad(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = DoomWad.Vertex(self._io, self, self._root)
@@ -412,7 +414,7 @@ class DoomWad(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = DoomWad.Thing(self._io, self, self._root)
@@ -437,7 +439,7 @@ class DoomWad(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = DoomWad.Linedef(self._io, self, self._root)
@@ -478,32 +480,32 @@ class DoomWad(KaitaiStruct):
             io.seek(self.offset)
             self._debug['_m_contents']['start'] = io.pos()
             _on = self.name
-            if _on == u"SECTORS":
-                self._raw__m_contents = io.read_bytes(self.size)
-                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
-                self._m_contents = DoomWad.Sectors(_io__raw__m_contents, self, self._root)
-                self._m_contents._read()
-            elif _on == u"TEXTURE1":
-                self._raw__m_contents = io.read_bytes(self.size)
-                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
-                self._m_contents = DoomWad.Texture12(_io__raw__m_contents, self, self._root)
-                self._m_contents._read()
-            elif _on == u"VERTEXES":
-                self._raw__m_contents = io.read_bytes(self.size)
-                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
-                self._m_contents = DoomWad.Vertexes(_io__raw__m_contents, self, self._root)
-                self._m_contents._read()
-            elif _on == u"BLOCKMAP":
+            if _on == u"BLOCKMAP":
                 self._raw__m_contents = io.read_bytes(self.size)
                 _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
                 self._m_contents = DoomWad.Blockmap(_io__raw__m_contents, self, self._root)
+                self._m_contents._read()
+            elif _on == u"LINEDEFS":
+                self._raw__m_contents = io.read_bytes(self.size)
+                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
+                self._m_contents = DoomWad.Linedefs(_io__raw__m_contents, self, self._root)
                 self._m_contents._read()
             elif _on == u"PNAMES":
                 self._raw__m_contents = io.read_bytes(self.size)
                 _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
                 self._m_contents = DoomWad.Pnames(_io__raw__m_contents, self, self._root)
                 self._m_contents._read()
-            elif _on == u"TEXTURE2":
+            elif _on == u"SECTORS":
+                self._raw__m_contents = io.read_bytes(self.size)
+                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
+                self._m_contents = DoomWad.Sectors(_io__raw__m_contents, self, self._root)
+                self._m_contents._read()
+            elif _on == u"SIDEDEFS":
+                self._raw__m_contents = io.read_bytes(self.size)
+                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
+                self._m_contents = DoomWad.Sidedefs(_io__raw__m_contents, self, self._root)
+                self._m_contents._read()
+            elif _on in [u"TEXTURE1", u"TEXTURE2"]:
                 self._raw__m_contents = io.read_bytes(self.size)
                 _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
                 self._m_contents = DoomWad.Texture12(_io__raw__m_contents, self, self._root)
@@ -513,15 +515,10 @@ class DoomWad(KaitaiStruct):
                 _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
                 self._m_contents = DoomWad.Things(_io__raw__m_contents, self, self._root)
                 self._m_contents._read()
-            elif _on == u"LINEDEFS":
+            elif _on == u"VERTEXES":
                 self._raw__m_contents = io.read_bytes(self.size)
                 _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
-                self._m_contents = DoomWad.Linedefs(_io__raw__m_contents, self, self._root)
-                self._m_contents._read()
-            elif _on == u"SIDEDEFS":
-                self._raw__m_contents = io.read_bytes(self.size)
-                _io__raw__m_contents = KaitaiStream(BytesIO(self._raw__m_contents))
-                self._m_contents = DoomWad.Sidedefs(_io__raw__m_contents, self, self._root)
+                self._m_contents = DoomWad.Vertexes(_io__raw__m_contents, self, self._root)
                 self._m_contents._read()
             else:
                 self._m_contents = io.read_bytes(self.size)
@@ -543,7 +540,7 @@ class DoomWad(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = DoomWad.Sidedef(self._io, self, self._root)
@@ -579,7 +576,7 @@ class DoomWad(KaitaiStruct):
             self._debug['linedefs_in_block']['start'] = self._io.pos()
             self.linedefs_in_block = [None] * ((self.num_cols * self.num_rows))
             for i in range((self.num_cols * self.num_rows)):
-                if not 'arr' in self._debug['linedefs_in_block']:
+                if 'arr' not in self._debug['linedefs_in_block']:
                     self._debug['linedefs_in_block']['arr'] = []
                 self._debug['linedefs_in_block']['arr'].append({'start': self._io.pos()})
                 _t_linedefs_in_block = DoomWad.Blockmap.Blocklist(self._io, self, self._root)
@@ -614,7 +611,7 @@ class DoomWad(KaitaiStruct):
                 self._m_linedefs = []
                 i = 0
                 while True:
-                    if not 'arr' in self._debug['_m_linedefs']:
+                    if 'arr' not in self._debug['_m_linedefs']:
                         self._debug['_m_linedefs']['arr'] = []
                     self._debug['_m_linedefs']['arr'].append({'start': self._io.pos()})
                     _ = self._io.read_s2le()
@@ -639,7 +636,7 @@ class DoomWad(KaitaiStruct):
         self._debug['_m_index']['start'] = self._io.pos()
         self._m_index = [None] * (self.num_index_entries)
         for i in range(self.num_index_entries):
-            if not 'arr' in self._debug['_m_index']:
+            if 'arr' not in self._debug['_m_index']:
                 self._debug['_m_index']['arr'] = []
             self._debug['_m_index']['arr'].append({'start': self._io.pos()})
             _t__m_index = DoomWad.IndexEntry(self._io, self, self._root)

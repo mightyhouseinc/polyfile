@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class EfivarSignatureList(KaitaiStruct):
     """Parse UEFI variables db and dbx that contain signatures, certificates and
@@ -41,7 +43,7 @@ class EfivarSignatureList(KaitaiStruct):
         self.signatures = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['signatures']:
+            if 'arr' not in self._debug['signatures']:
                 self._debug['signatures']['arr'] = []
             self._debug['signatures']['arr'].append({'start': self._io.pos()})
             _t_signatures = EfivarSignatureList.SignatureList(self._io, self, self._root)
@@ -85,7 +87,7 @@ class EfivarSignatureList(KaitaiStruct):
                 self._raw_signatures = [None] * (((self.len_signature_list - self.len_signature_header) - 28) // self.len_signature)
                 self.signatures = [None] * (((self.len_signature_list - self.len_signature_header) - 28) // self.len_signature)
                 for i in range(((self.len_signature_list - self.len_signature_header) - 28) // self.len_signature):
-                    if not 'arr' in self._debug['signatures']:
+                    if 'arr' not in self._debug['signatures']:
                         self._debug['signatures']['arr'] = []
                     self._debug['signatures']['arr'].append({'start': self._io.pos()})
                     self._raw_signatures[i] = self._io.read_bytes(self.len_signature)

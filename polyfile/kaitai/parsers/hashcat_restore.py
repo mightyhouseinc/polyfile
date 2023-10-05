@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class HashcatRestore(KaitaiStruct):
     """
@@ -49,7 +51,7 @@ class HashcatRestore(KaitaiStruct):
         self._debug['argv']['start'] = self._io.pos()
         self.argv = [None] * (self.argc)
         for i in range(self.argc):
-            if not 'arr' in self._debug['argv']:
+            if 'arr' not in self._debug['argv']:
                 self._debug['argv']['arr'] = []
             self._debug['argv']['arr'].append({'start': self._io.pos()})
             self.argv[i] = (self._io.read_bytes_term(10, False, True, True)).decode(u"UTF-8")

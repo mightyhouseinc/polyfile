@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Exif(KaitaiStruct):
     SEQ_FIELDS = ["endianness", "body"]
@@ -88,7 +90,7 @@ class Exif(KaitaiStruct):
                 self._debug['fields']['start'] = self._io.pos()
                 self.fields = [None] * (self.num_fields)
                 for i in range(self.num_fields):
-                    if not 'arr' in self._debug['fields']:
+                    if 'arr' not in self._debug['fields']:
                         self._debug['fields']['arr'] = []
                     self._debug['fields']['arr'].append({'start': self._io.pos()})
                     _t_fields = Exif.ExifBody.IfdField(self._io, self, self._root, self._is_le)
@@ -108,7 +110,7 @@ class Exif(KaitaiStruct):
                 self._debug['fields']['start'] = self._io.pos()
                 self.fields = [None] * (self.num_fields)
                 for i in range(self.num_fields):
-                    if not 'arr' in self._debug['fields']:
+                    if 'arr' not in self._debug['fields']:
                         self._debug['fields']['arr'] = []
                     self._debug['fields']['arr'].append({'start': self._io.pos()})
                     _t_fields = Exif.ExifBody.IfdField(self._io, self, self._root, self._is_le)
@@ -130,12 +132,8 @@ class Exif(KaitaiStruct):
                     _pos = self._io.pos()
                     self._io.seek(self.next_ifd_ofs)
                     self._debug['_m_next_ifd']['start'] = self._io.pos()
-                    if self._is_le:
-                        self._m_next_ifd = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
-                        self._m_next_ifd._read()
-                    else:
-                        self._m_next_ifd = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
-                        self._m_next_ifd._read()
+                    self._m_next_ifd = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
+                    self._m_next_ifd._read()
                     self._debug['_m_next_ifd']['end'] = self._io.pos()
                     self._io.seek(_pos)
 
@@ -691,10 +689,7 @@ class Exif(KaitaiStruct):
                     _pos = io.pos()
                     io.seek(self.ofs_or_data)
                     self._debug['_m_data']['start'] = io.pos()
-                    if self._is_le:
-                        self._m_data = io.read_bytes(self.byte_length)
-                    else:
-                        self._m_data = io.read_bytes(self.byte_length)
+                    self._m_data = io.read_bytes(self.byte_length)
                     self._debug['_m_data']['end'] = io.pos()
                     io.seek(_pos)
 
@@ -709,12 +704,8 @@ class Exif(KaitaiStruct):
             _pos = self._io.pos()
             self._io.seek(self.ifd0_ofs)
             self._debug['_m_ifd0']['start'] = self._io.pos()
-            if self._is_le:
-                self._m_ifd0 = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
-                self._m_ifd0._read()
-            else:
-                self._m_ifd0 = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
-                self._m_ifd0._read()
+            self._m_ifd0 = Exif.ExifBody.Ifd(self._io, self, self._root, self._is_le)
+            self._m_ifd0._read()
             self._debug['_m_ifd0']['end'] = self._io.pos()
             self._io.seek(_pos)
             return self._m_ifd0 if hasattr(self, '_m_ifd0') else None
