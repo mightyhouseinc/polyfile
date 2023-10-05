@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Dcmp2(KaitaiStruct):
     """Compressed resource data in `'dcmp' (2)` format,
@@ -47,7 +49,7 @@ class Dcmp2(KaitaiStruct):
             self._debug['custom_lookup_table']['start'] = self._io.pos()
             self.custom_lookup_table = [None] * (self.header_parameters.num_custom_lookup_table_entries)
             for i in range(self.header_parameters.num_custom_lookup_table_entries):
-                if not 'arr' in self._debug['custom_lookup_table']:
+                if 'arr' not in self._debug['custom_lookup_table']:
                     self._debug['custom_lookup_table']['arr'] = []
                 self._debug['custom_lookup_table']['arr'].append({'start': self._io.pos()})
                 self.custom_lookup_table[i] = self._io.read_bytes(2)
@@ -57,16 +59,13 @@ class Dcmp2(KaitaiStruct):
 
         self._debug['data']['start'] = self._io.pos()
         _on = self.header_parameters.flags.tagged
+        self._raw_data = self._io.read_bytes(((self._io.size() - self._io.pos()) - (1 if self.is_len_decompressed_odd else 0)))
+        _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
         if _on == True:
-            self._raw_data = self._io.read_bytes(((self._io.size() - self._io.pos()) - (1 if self.is_len_decompressed_odd else 0)))
-            _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
             self.data = Dcmp2.TaggedData(_io__raw_data, self, self._root)
-            self.data._read()
         else:
-            self._raw_data = self._io.read_bytes(((self._io.size() - self._io.pos()) - (1 if self.is_len_decompressed_odd else 0)))
-            _io__raw_data = KaitaiStream(BytesIO(self._raw_data))
             self.data = Dcmp2.UntaggedData(_io__raw_data, self, self._root)
-            self.data._read()
+        self.data._read()
         self._debug['data']['end'] = self._io.pos()
         if self.is_len_decompressed_odd:
             self._debug['last_byte']['start'] = self._io.pos()
@@ -165,7 +164,7 @@ class Dcmp2(KaitaiStruct):
             self.table_references = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['table_references']:
+                if 'arr' not in self._debug['table_references']:
                     self._debug['table_references']['arr'] = []
                 self._debug['table_references']['arr'].append({'start': self._io.pos()})
                 self.table_references.append(self._io.read_u1())
@@ -190,7 +189,7 @@ class Dcmp2(KaitaiStruct):
             self.chunks = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['chunks']:
+                if 'arr' not in self._debug['chunks']:
                     self._debug['chunks']['arr'] = []
                 self._debug['chunks']['arr'].append({'start': self._io.pos()})
                 _t_chunks = Dcmp2.TaggedData.Chunk(self._io, self, self._root)
@@ -221,7 +220,7 @@ class Dcmp2(KaitaiStruct):
                 self._debug['tag']['start'] = self._io.pos()
                 self.tag = [None] * (8)
                 for i in range(8):
-                    if not 'arr' in self._debug['tag']:
+                    if 'arr' not in self._debug['tag']:
                         self._debug['tag']['arr'] = []
                     self._debug['tag']['arr'].append({'start': self._io.pos()})
                     self.tag[i] = self._io.read_bits_int_be(1) != 0
@@ -234,24 +233,19 @@ class Dcmp2(KaitaiStruct):
                 self.units = []
                 i = 0
                 while True:
-                    if not 'arr' in self._debug['units']:
+                    if 'arr' not in self._debug['units']:
                         self._debug['units']['arr'] = []
                     self._debug['units']['arr'].append({'start': self._io.pos()})
                     _on = self.tag[i]
+                    if 'arr' not in self._debug['units']:
+                        self._debug['units']['arr'] = []
+                    self._debug['units']['arr'].append({'start': self._io.pos()})
                     if _on == True:
-                        if not 'arr' in self._debug['units']:
-                            self._debug['units']['arr'] = []
-                        self._debug['units']['arr'].append({'start': self._io.pos()})
                         _ = self._io.read_u1()
-                        self.units.append(_)
-                        self._debug['units']['arr'][len(self.units) - 1]['end'] = self._io.pos()
                     else:
-                        if not 'arr' in self._debug['units']:
-                            self._debug['units']['arr'] = []
-                        self._debug['units']['arr'].append({'start': self._io.pos()})
                         _ = self._io.read_bytes((1 if self.tag[i] else 2))
-                        self.units.append(_)
-                        self._debug['units']['arr'][len(self.units) - 1]['end'] = self._io.pos()
+                    self.units.append(_)
+                    self._debug['units']['arr'][len(self.units) - 1]['end'] = self._io.pos()
                     self._debug['units']['arr'][len(self.units) - 1]['end'] = self._io.pos()
                     if  ((i >= 7) or (self._io.is_eof())) :
                         break

@@ -185,10 +185,7 @@ def parse_bf(file_stream, match):
         if len(b) < 1:
             break
         if b[0] in commands:
-            if loop_stack:
-                parent: Match = loop_stack[-1]
-            else:
-                parent = match
+            parent = loop_stack[-1] if loop_stack else match
             if b == b"[":
                 loop = Submatch(
                     "Loop",
@@ -205,13 +202,13 @@ def parse_bf(file_stream, match):
                     log.warning(f"Unexpected closing bracket at offset {relative_offset + match.offset}")
                 else:
                     loop_stack.pop()
-            s = Submatch(
+            yield Submatch(
                 commands[b[0]],
                 match_obj=b,
-                relative_offset=relative_offset - (parent.offset - match.offset),
+                relative_offset=relative_offset
+                - (parent.offset - match.offset),
                 length=1,
                 parent=parent,
-                matcher=match.matcher
+                matcher=match.matcher,
             )
-            yield s
         relative_offset += 1

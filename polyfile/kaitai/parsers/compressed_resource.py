@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 from polyfile.kaitai.parsers import bytes_with_io
 class CompressedResource(KaitaiStruct):
@@ -95,12 +97,12 @@ class CompressedResource(KaitaiStruct):
                 self._debug['magic']['start'] = self._io.pos()
                 self.magic = self._io.read_bytes(4)
                 self._debug['magic']['end'] = self._io.pos()
-                if not self.magic == b"\xA8\x9F\x65\x72":
+                if self.magic != b"\xA8\x9F\x65\x72":
                     raise kaitaistruct.ValidationNotEqualError(b"\xA8\x9F\x65\x72", self.magic, self._io, u"/types/header/types/common_part/seq/0")
                 self._debug['len_header']['start'] = self._io.pos()
                 self.len_header = self._io.read_u2be()
                 self._debug['len_header']['end'] = self._io.pos()
-                if not self.len_header == 18:
+                if self.len_header != 18:
                     raise kaitaistruct.ValidationNotEqualError(18, self.len_header, self._io, u"/types/header/types/common_part/seq/1")
                 self._debug['header_type']['start'] = self._io.pos()
                 self.header_type = self._io.read_u1()
@@ -108,7 +110,7 @@ class CompressedResource(KaitaiStruct):
                 self._debug['unknown']['start'] = self._io.pos()
                 self.unknown = self._io.read_u1()
                 self._debug['unknown']['end'] = self._io.pos()
-                if not self.unknown == 1:
+                if self.unknown != 1:
                     raise kaitaistruct.ValidationNotEqualError(1, self.unknown, self._io, u"/types/header/types/common_part/seq/3")
                 self._debug['len_decompressed']['start'] = self._io.pos()
                 self.len_decompressed = self._io.read_u4be()
@@ -138,7 +140,7 @@ class CompressedResource(KaitaiStruct):
                 self._debug['reserved']['start'] = self._io.pos()
                 self.reserved = self._io.read_u2be()
                 self._debug['reserved']['end'] = self._io.pos()
-                if not self.reserved == 0:
+                if self.reserved != 0:
                     raise kaitaistruct.ValidationNotEqualError(0, self.reserved, self._io, u"/types/header/types/type_specific_part_type_8/seq/3")
 
 

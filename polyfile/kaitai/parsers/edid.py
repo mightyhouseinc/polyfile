@@ -9,7 +9,9 @@ import struct
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Edid(KaitaiStruct):
     SEQ_FIELDS = ["magic", "mfg_bytes", "product_code", "serial", "mfg_week", "mfg_year_mod", "edid_version_major", "edid_version_minor", "input_flags", "screen_size_h", "screen_size_v", "gamma_mod", "features_flags", "chromacity", "est_timings", "std_timings"]
@@ -23,7 +25,7 @@ class Edid(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(8)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00":
+        if self.magic != b"\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00":
             raise kaitaistruct.ValidationNotEqualError(b"\x00\xFF\xFF\xFF\xFF\xFF\xFF\x00", self.magic, self._io, u"/seq/0")
         self._debug['mfg_bytes']['start'] = self._io.pos()
         self.mfg_bytes = self._io.read_u2be()
@@ -73,7 +75,7 @@ class Edid(KaitaiStruct):
         self._raw_std_timings = [None] * (8)
         self.std_timings = [None] * (8)
         for i in range(8):
-            if not 'arr' in self._debug['std_timings']:
+            if 'arr' not in self._debug['std_timings']:
                 self._debug['std_timings']['arr'] = []
             self._debug['std_timings']['arr'].append({'start': self._io.pos()})
             self._raw_std_timings[i] = self._io.read_bytes(2)

@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidNanoappHeader(KaitaiStruct):
     """
@@ -25,12 +27,12 @@ class AndroidNanoappHeader(KaitaiStruct):
         self._debug['header_version']['start'] = self._io.pos()
         self.header_version = self._io.read_u4le()
         self._debug['header_version']['end'] = self._io.pos()
-        if not self.header_version == 1:
+        if self.header_version != 1:
             raise kaitaistruct.ValidationNotEqualError(1, self.header_version, self._io, u"/seq/0")
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(4)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x4E\x41\x4E\x4F":
+        if self.magic != b"\x4E\x41\x4E\x4F":
             raise kaitaistruct.ValidationNotEqualError(b"\x4E\x41\x4E\x4F", self.magic, self._io, u"/seq/1")
         self._debug['app_id']['start'] = self._io.pos()
         self.app_id = self._io.read_u8le()
@@ -53,7 +55,7 @@ class AndroidNanoappHeader(KaitaiStruct):
         self._debug['reserved']['start'] = self._io.pos()
         self.reserved = self._io.read_bytes(6)
         self._debug['reserved']['end'] = self._io.pos()
-        if not self.reserved == b"\x00\x00\x00\x00\x00\x00":
+        if self.reserved != b"\x00\x00\x00\x00\x00\x00":
             raise kaitaistruct.ValidationNotEqualError(b"\x00\x00\x00\x00\x00\x00", self.reserved, self._io, u"/seq/8")
 
     @property

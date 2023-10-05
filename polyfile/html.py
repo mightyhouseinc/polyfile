@@ -38,38 +38,28 @@ def generate(file_path, sbud):
 
     input_bytes = sbud['length']
     with open(file_path, 'rb') as input_file:
-        class ReadUnicode():
+
+
+
+        class ReadUnicode:
             def __init__(self):
                 self.reset = False
 
             def tell(self):
-                if not self.reset:
-                    return 0
-                else:
-                    return input_file.tell()
+                return 0 if not self.reset else input_file.tell()
 
             def translate(self, b, monospace=True):
                 if b is None or len(b) == 0 or b == b' ':
                     return '&nbsp;'
                 elif b == b'\n':
-                    if monospace:
-                        return '\u2424'
-                    else:
-                        return '\u2424</span><br /><span>'
+                    return '\u2424' if monospace else '\u2424</span><br /><span>'
                 elif b == b'\t':
-                    if monospace:
-                        return b'\xE2\xAD\xBE'
-                    else:
-                        return '\t'
+                    return b'\xE2\xAD\xBE' if monospace else '\t'
                 elif b == b'\r':
                     return '\u240d'
                 try:
                     u = b.decode('utf-8')
-                    if unicodedata.category(u) == 'Cc':
-                        # This is a control character
-                        return '\ufffd'
-                    else:
-                        return u
+                    return '\ufffd' if unicodedata.category(u) == 'Cc' else u
                 except UnicodeDecodeError:
                     return '\ufffd'
 
@@ -89,6 +79,7 @@ def generate(file_path, sbud):
                     self.reset = True
                 b = input_file.read(1)
                 return self.translate(b)
+
 
         mime_type = mimetypes.guess_type(file_path)[0]
         if mime_type is None:

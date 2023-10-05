@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AvantesRoh60(KaitaiStruct):
     """Avantes USB spectrometers are supplied with a Windows binary which
@@ -66,7 +68,7 @@ class AvantesRoh60(KaitaiStruct):
         self._debug['unknown2']['start'] = self._io.pos()
         self.unknown2 = [None] * (9)
         for i in range(9):
-            if not 'arr' in self._debug['unknown2']:
+            if 'arr' not in self._debug['unknown2']:
                 self._debug['unknown2']['arr'] = []
             self._debug['unknown2']['arr'].append({'start': self._io.pos()})
             self.unknown2[i] = self._io.read_f4le()
@@ -82,7 +84,7 @@ class AvantesRoh60(KaitaiStruct):
         self._debug['unknown3']['start'] = self._io.pos()
         self.unknown3 = [None] * (4)
         for i in range(4):
-            if not 'arr' in self._debug['unknown3']:
+            if 'arr' not in self._debug['unknown3']:
                 self._debug['unknown3']['arr'] = []
             self._debug['unknown3']['arr'].append({'start': self._io.pos()})
             self.unknown3[i] = self._io.read_f4le()
@@ -92,7 +94,7 @@ class AvantesRoh60(KaitaiStruct):
         self._debug['spectrum']['start'] = self._io.pos()
         self.spectrum = [None] * (((int(self.ipixlast) - int(self.ipixfirst)) - 1))
         for i in range(((int(self.ipixlast) - int(self.ipixfirst)) - 1)):
-            if not 'arr' in self._debug['spectrum']:
+            if 'arr' not in self._debug['spectrum']:
                 self._debug['spectrum']['arr'] = []
             self._debug['spectrum']['arr'].append({'start': self._io.pos()})
             self.spectrum[i] = self._io.read_f4le()

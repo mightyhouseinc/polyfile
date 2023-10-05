@@ -157,7 +157,7 @@ def parse_zip(file_stream, parent):
     if eocd is None:
         raise InvalidMatch()
     cds = list(eocd.central_directories(file_stream))
-    fhs = list(cd.local_file_header(file_stream) for cd in cds)
+    fhs = [cd.local_file_header(file_stream) for cd in cds]
     zf: Optional[PythonZip] = None
     for fh in fhs:
         if zf is None:

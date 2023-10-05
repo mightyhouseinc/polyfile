@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Gzip(KaitaiStruct):
     """Gzip is a popular and standard single-file archiving format. It
@@ -54,7 +56,7 @@ class Gzip(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(2)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x1F\x8B":
+        if self.magic != b"\x1F\x8B":
             raise kaitaistruct.ValidationNotEqualError(b"\x1F\x8B", self.magic, self._io, u"/seq/0")
         self._debug['compression_method']['start'] = self._io.pos()
         self.compression_method = KaitaiStream.resolve_enum(Gzip.CompressionMethods, self._io.read_u1())
@@ -168,7 +170,7 @@ class Gzip(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Gzip.Subfield(self._io, self, self._root)

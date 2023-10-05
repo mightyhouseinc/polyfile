@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class CreativeVoiceFile(KaitaiStruct):
     """Creative Voice File is a container file format for digital audio
@@ -58,7 +60,10 @@ class CreativeVoiceFile(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(20)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x43\x72\x65\x61\x74\x69\x76\x65\x20\x56\x6F\x69\x63\x65\x20\x46\x69\x6C\x65\x1A":
+        if (
+            self.magic
+            != b"\x43\x72\x65\x61\x74\x69\x76\x65\x20\x56\x6F\x69\x63\x65\x20\x46\x69\x6C\x65\x1A"
+        ):
             raise kaitaistruct.ValidationNotEqualError(b"\x43\x72\x65\x61\x74\x69\x76\x65\x20\x56\x6F\x69\x63\x65\x20\x46\x69\x6C\x65\x1A", self.magic, self._io, u"/seq/0")
         self._debug['header_size']['start'] = self._io.pos()
         self.header_size = self._io.read_u2le()
@@ -73,7 +78,7 @@ class CreativeVoiceFile(KaitaiStruct):
         self.blocks = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['blocks']:
+            if 'arr' not in self._debug['blocks']:
                 self._debug['blocks']['arr'] = []
             self._debug['blocks']['arr'].append({'start': self._io.pos()})
             _t_blocks = CreativeVoiceFile.Block(self._io, self, self._root)

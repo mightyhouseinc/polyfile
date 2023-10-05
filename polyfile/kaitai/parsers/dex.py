@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 from polyfile.kaitai.parsers import vlq_base128_le
 class Dex(KaitaiStruct):
@@ -64,7 +66,7 @@ class Dex(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x64\x65\x78\x0A":
+            if self.magic != b"\x64\x65\x78\x0A":
                 raise kaitaistruct.ValidationNotEqualError(b"\x64\x65\x78\x0A", self.magic, self._io, u"/types/header_item/seq/0")
             self._debug['version_str']['start'] = self._io.pos()
             self.version_str = (KaitaiStream.bytes_terminate(self._io.read_bytes(4), 0, False)).decode(u"ascii")
@@ -152,7 +154,7 @@ class Dex(KaitaiStruct):
             self._debug['list']['start'] = self._io.pos()
             self.list = [None] * (self.size)
             for i in range(self.size):
-                if not 'arr' in self._debug['list']:
+                if 'arr' not in self._debug['list']:
                     self._debug['list']['arr'] = []
                 self._debug['list']['arr'].append({'start': self._io.pos()})
                 _t_list = Dex.MapItem(self._io, self, self._root)
@@ -424,7 +426,7 @@ class Dex(KaitaiStruct):
             self._debug['static_fields']['start'] = self._io.pos()
             self.static_fields = [None] * (self.static_fields_size.value)
             for i in range(self.static_fields_size.value):
-                if not 'arr' in self._debug['static_fields']:
+                if 'arr' not in self._debug['static_fields']:
                     self._debug['static_fields']['arr'] = []
                 self._debug['static_fields']['arr'].append({'start': self._io.pos()})
                 _t_static_fields = Dex.EncodedField(self._io, self, self._root)
@@ -436,7 +438,7 @@ class Dex(KaitaiStruct):
             self._debug['instance_fields']['start'] = self._io.pos()
             self.instance_fields = [None] * (self.instance_fields_size.value)
             for i in range(self.instance_fields_size.value):
-                if not 'arr' in self._debug['instance_fields']:
+                if 'arr' not in self._debug['instance_fields']:
                     self._debug['instance_fields']['arr'] = []
                 self._debug['instance_fields']['arr'].append({'start': self._io.pos()})
                 _t_instance_fields = Dex.EncodedField(self._io, self, self._root)
@@ -448,7 +450,7 @@ class Dex(KaitaiStruct):
             self._debug['direct_methods']['start'] = self._io.pos()
             self.direct_methods = [None] * (self.direct_methods_size.value)
             for i in range(self.direct_methods_size.value):
-                if not 'arr' in self._debug['direct_methods']:
+                if 'arr' not in self._debug['direct_methods']:
                     self._debug['direct_methods']['arr'] = []
                 self._debug['direct_methods']['arr'].append({'start': self._io.pos()})
                 _t_direct_methods = Dex.EncodedMethod(self._io, self, self._root)
@@ -460,7 +462,7 @@ class Dex(KaitaiStruct):
             self._debug['virtual_methods']['start'] = self._io.pos()
             self.virtual_methods = [None] * (self.virtual_methods_size.value)
             for i in range(self.virtual_methods_size.value):
-                if not 'arr' in self._debug['virtual_methods']:
+                if 'arr' not in self._debug['virtual_methods']:
                     self._debug['virtual_methods']['arr'] = []
                 self._debug['virtual_methods']['arr'].append({'start': self._io.pos()})
                 _t_virtual_methods = Dex.EncodedMethod(self._io, self, self._root)
@@ -538,7 +540,7 @@ class Dex(KaitaiStruct):
             self._debug['elements']['start'] = self._io.pos()
             self.elements = [None] * (self.size.value)
             for i in range(self.size.value):
-                if not 'arr' in self._debug['elements']:
+                if 'arr' not in self._debug['elements']:
                     self._debug['elements']['arr'] = []
                 self._debug['elements']['arr'].append({'start': self._io.pos()})
                 _t_elements = Dex.AnnotationElement(self._io, self, self._root)
@@ -639,7 +641,7 @@ class Dex(KaitaiStruct):
             self._debug['list']['start'] = self._io.pos()
             self.list = [None] * (self.size)
             for i in range(self.size):
-                if not 'arr' in self._debug['list']:
+                if 'arr' not in self._debug['list']:
                     self._debug['list']['arr'] = []
                 self._debug['list']['arr'].append({'start': self._io.pos()})
                 _t_list = Dex.TypeItem(self._io, self, self._root)
@@ -836,7 +838,7 @@ class Dex(KaitaiStruct):
             self._debug['values']['start'] = self._io.pos()
             self.values = [None] * (self.size.value)
             for i in range(self.size.value):
-                if not 'arr' in self._debug['values']:
+                if 'arr' not in self._debug['values']:
                     self._debug['values']['arr'] = []
                 self._debug['values']['arr'].append({'start': self._io.pos()})
                 _t_values = Dex.EncodedValue(self._io, self, self._root)
@@ -865,7 +867,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_string_ids']['start'] = self._io.pos()
         self._m_string_ids = [None] * (self.header.string_ids_size)
         for i in range(self.header.string_ids_size):
-            if not 'arr' in self._debug['_m_string_ids']:
+            if 'arr' not in self._debug['_m_string_ids']:
                 self._debug['_m_string_ids']['arr'] = []
             self._debug['_m_string_ids']['arr'].append({'start': self._io.pos()})
             _t__m_string_ids = Dex.StringIdItem(self._io, self, self._root)
@@ -898,7 +900,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_method_ids']['start'] = self._io.pos()
         self._m_method_ids = [None] * (self.header.method_ids_size)
         for i in range(self.header.method_ids_size):
-            if not 'arr' in self._debug['_m_method_ids']:
+            if 'arr' not in self._debug['_m_method_ids']:
                 self._debug['_m_method_ids']['arr'] = []
             self._debug['_m_method_ids']['arr'].append({'start': self._io.pos()})
             _t__m_method_ids = Dex.MethodIdItem(self._io, self, self._root)
@@ -962,7 +964,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_class_defs']['start'] = self._io.pos()
         self._m_class_defs = [None] * (self.header.class_defs_size)
         for i in range(self.header.class_defs_size):
-            if not 'arr' in self._debug['_m_class_defs']:
+            if 'arr' not in self._debug['_m_class_defs']:
                 self._debug['_m_class_defs']['arr'] = []
             self._debug['_m_class_defs']['arr'].append({'start': self._io.pos()})
             _t__m_class_defs = Dex.ClassDefItem(self._io, self, self._root)
@@ -1009,7 +1011,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_type_ids']['start'] = self._io.pos()
         self._m_type_ids = [None] * (self.header.type_ids_size)
         for i in range(self.header.type_ids_size):
-            if not 'arr' in self._debug['_m_type_ids']:
+            if 'arr' not in self._debug['_m_type_ids']:
                 self._debug['_m_type_ids']['arr'] = []
             self._debug['_m_type_ids']['arr'].append({'start': self._io.pos()})
             _t__m_type_ids = Dex.TypeIdItem(self._io, self, self._root)
@@ -1039,7 +1041,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_proto_ids']['start'] = self._io.pos()
         self._m_proto_ids = [None] * (self.header.proto_ids_size)
         for i in range(self.header.proto_ids_size):
-            if not 'arr' in self._debug['_m_proto_ids']:
+            if 'arr' not in self._debug['_m_proto_ids']:
                 self._debug['_m_proto_ids']['arr'] = []
             self._debug['_m_proto_ids']['arr'].append({'start': self._io.pos()})
             _t__m_proto_ids = Dex.ProtoIdItem(self._io, self, self._root)
@@ -1071,7 +1073,7 @@ class Dex(KaitaiStruct):
         self._debug['_m_field_ids']['start'] = self._io.pos()
         self._m_field_ids = [None] * (self.header.field_ids_size)
         for i in range(self.header.field_ids_size):
-            if not 'arr' in self._debug['_m_field_ids']:
+            if 'arr' not in self._debug['_m_field_ids']:
                 self._debug['_m_field_ids']['arr'] = []
             self._debug['_m_field_ids']['arr'].append({'start': self._io.pos()})
             _t__m_field_ids = Dex.FieldIdItem(self._io, self, self._root)

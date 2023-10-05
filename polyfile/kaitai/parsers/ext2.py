@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Ext2(KaitaiStruct):
     SEQ_FIELDS = []
@@ -87,7 +89,7 @@ class Ext2(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(2)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x53\xEF":
+            if self.magic != b"\x53\xEF":
                 raise kaitaistruct.ValidationNotEqualError(b"\x53\xEF", self.magic, self._io, u"/types/super_block_struct/seq/15")
             self._debug['state']['start'] = self._io.pos()
             self.state = KaitaiStream.resolve_enum(Ext2.SuperBlockStruct.StateEnum, self._io.read_u2le())
@@ -170,7 +172,7 @@ class Ext2(KaitaiStruct):
             self._debug['hash_seed']['start'] = self._io.pos()
             self.hash_seed = [None] * (4)
             for i in range(4):
-                if not 'arr' in self._debug['hash_seed']:
+                if 'arr' not in self._debug['hash_seed']:
                     self._debug['hash_seed']['arr'] = []
                 self._debug['hash_seed']['arr'].append({'start': self._io.pos()})
                 self.hash_seed[i] = self._io.read_u4le()
@@ -293,7 +295,7 @@ class Ext2(KaitaiStruct):
             self._debug['block']['start'] = self._io.pos()
             self.block = [None] * (15)
             for i in range(15):
-                if not 'arr' in self._debug['block']:
+                if 'arr' not in self._debug['block']:
                     self._debug['block']['arr'] = []
                 self._debug['block']['arr'].append({'start': self._io.pos()})
                 _t_block = Ext2.BlockPtr(self._io, self, self._root)
@@ -377,7 +379,7 @@ class Ext2(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Ext2.DirEntry(self._io, self, self._root)
@@ -407,7 +409,7 @@ class Ext2(KaitaiStruct):
             self._debug['block_groups']['start'] = self._io.pos()
             self.block_groups = [None] * (self.super_block.block_group_count)
             for i in range(self.super_block.block_group_count):
-                if not 'arr' in self._debug['block_groups']:
+                if 'arr' not in self._debug['block_groups']:
                     self._debug['block_groups']['arr'] = []
                 self._debug['block_groups']['arr'].append({'start': self._io.pos()})
                 _t_block_groups = Ext2.Bgd(self._io, self, self._root)
@@ -485,7 +487,7 @@ class Ext2(KaitaiStruct):
             self._debug['_m_inodes']['start'] = self._io.pos()
             self._m_inodes = [None] * (self._root.bg1.super_block.inodes_per_group)
             for i in range(self._root.bg1.super_block.inodes_per_group):
-                if not 'arr' in self._debug['_m_inodes']:
+                if 'arr' not in self._debug['_m_inodes']:
                     self._debug['_m_inodes']['arr'] = []
                 self._debug['_m_inodes']['arr'].append({'start': self._io.pos()})
                 _t__m_inodes = Ext2.Inode(self._io, self, self._root)

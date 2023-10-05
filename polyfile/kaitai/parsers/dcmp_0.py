@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 from polyfile.kaitai.parsers import dcmp_variable_length_integer
 class Dcmp0(KaitaiStruct):
@@ -54,7 +56,7 @@ class Dcmp0(KaitaiStruct):
         self.chunks = []
         i = 0
         while True:
-            if not 'arr' in self._debug['chunks']:
+            if 'arr' not in self._debug['chunks']:
                 self._debug['chunks']['arr'] = []
             self._debug['chunks']['arr'].append({'start': self._io.pos()})
             _t_chunks = Dcmp0.Chunk(self._io, self, self._root)
@@ -225,9 +227,7 @@ class Dcmp0(KaitaiStruct):
                 if self.is_index_separate:
                     self._debug['index_separate_minus']['start'] = self._io.pos()
                     _on = self.tag
-                    if _on == 32:
-                        self.index_separate_minus = self._io.read_u1()
-                    elif _on == 33:
+                    if _on in [32, 33]:
                         self.index_separate_minus = self._io.read_u1()
                     elif _on == 34:
                         self.index_separate_minus = self._io.read_u2be()
@@ -378,10 +378,7 @@ class Dcmp0(KaitaiStruct):
                 elif _on == 6:
                     self.body = Dcmp0.Chunk.ExtendedBody.DeltaEncoding32BitBody(self._io, self, self._root)
                     self.body._read()
-                elif _on == 3:
-                    self.body = Dcmp0.Chunk.ExtendedBody.RepeatBody(self.tag, self._io, self, self._root)
-                    self.body._read()
-                elif _on == 2:
+                elif _on in [3, 2]:
                     self.body = Dcmp0.Chunk.ExtendedBody.RepeatBody(self.tag, self._io, self, self._root)
                     self.body._read()
                 self._debug['body']['end'] = self._io.pos()
@@ -426,7 +423,7 @@ class Dcmp0(KaitaiStruct):
                     self._debug['addresses_raw']['start'] = self._io.pos()
                     self.addresses_raw = [None] * (self.num_addresses)
                     for i in range(self.num_addresses):
-                        if not 'arr' in self._debug['addresses_raw']:
+                        if 'arr' not in self._debug['addresses_raw']:
                             self._debug['addresses_raw']['arr'] = []
                         self._debug['addresses_raw']['arr'].append({'start': self._io.pos()})
                         _t_addresses_raw = dcmp_variable_length_integer.DcmpVariableLengthInteger(self._io)
@@ -565,7 +562,7 @@ class Dcmp0(KaitaiStruct):
                     self._debug['deltas']['start'] = self._io.pos()
                     self.deltas = [None] * (self.num_deltas)
                     for i in range(self.num_deltas):
-                        if not 'arr' in self._debug['deltas']:
+                        if 'arr' not in self._debug['deltas']:
                             self._debug['deltas']['arr'] = []
                         self._debug['deltas']['arr'].append({'start': self._io.pos()})
                         self.deltas[i] = self._io.read_s1()
@@ -626,7 +623,7 @@ class Dcmp0(KaitaiStruct):
                     self._debug['deltas_raw']['start'] = self._io.pos()
                     self.deltas_raw = [None] * (self.num_deltas)
                     for i in range(self.num_deltas):
-                        if not 'arr' in self._debug['deltas_raw']:
+                        if 'arr' not in self._debug['deltas_raw']:
                             self._debug['deltas_raw']['arr'] = []
                         self._debug['deltas_raw']['arr'].append({'start': self._io.pos()})
                         _t_deltas_raw = dcmp_variable_length_integer.DcmpVariableLengthInteger(self._io)

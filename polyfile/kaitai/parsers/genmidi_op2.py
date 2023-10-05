@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class GenmidiOp2(KaitaiStruct):
     """GENMIDI.OP2 is a sound bank file used by players based on DMX sound
@@ -42,12 +44,12 @@ class GenmidiOp2(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(8)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x23\x4F\x50\x4C\x5F\x49\x49\x23":
+        if self.magic != b"\x23\x4F\x50\x4C\x5F\x49\x49\x23":
             raise kaitaistruct.ValidationNotEqualError(b"\x23\x4F\x50\x4C\x5F\x49\x49\x23", self.magic, self._io, u"/seq/0")
         self._debug['instruments']['start'] = self._io.pos()
         self.instruments = [None] * (175)
         for i in range(175):
-            if not 'arr' in self._debug['instruments']:
+            if 'arr' not in self._debug['instruments']:
                 self._debug['instruments']['arr'] = []
             self._debug['instruments']['arr'].append({'start': self._io.pos()})
             _t_instruments = GenmidiOp2.InstrumentEntry(self._io, self, self._root)
@@ -59,7 +61,7 @@ class GenmidiOp2(KaitaiStruct):
         self._debug['instrument_names']['start'] = self._io.pos()
         self.instrument_names = [None] * (175)
         for i in range(175):
-            if not 'arr' in self._debug['instrument_names']:
+            if 'arr' not in self._debug['instrument_names']:
                 self._debug['instrument_names']['arr'] = []
             self._debug['instrument_names']['arr'].append({'start': self._io.pos()})
             self.instrument_names[i] = (KaitaiStream.bytes_terminate(KaitaiStream.bytes_strip_right(self._io.read_bytes(32), 0), 0, False)).decode(u"ASCII")
@@ -88,7 +90,7 @@ class GenmidiOp2(KaitaiStruct):
             self._debug['instruments']['start'] = self._io.pos()
             self.instruments = [None] * (2)
             for i in range(2):
-                if not 'arr' in self._debug['instruments']:
+                if 'arr' not in self._debug['instruments']:
                     self._debug['instruments']['arr'] = []
                 self._debug['instruments']['arr'].append({'start': self._io.pos()})
                 _t_instruments = GenmidiOp2.Instrument(self._io, self, self._root)

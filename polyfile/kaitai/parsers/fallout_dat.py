@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class FalloutDat(KaitaiStruct):
 
@@ -38,7 +40,7 @@ class FalloutDat(KaitaiStruct):
         self._debug['folder_names']['start'] = self._io.pos()
         self.folder_names = [None] * (self.folder_count)
         for i in range(self.folder_count):
-            if not 'arr' in self._debug['folder_names']:
+            if 'arr' not in self._debug['folder_names']:
                 self._debug['folder_names']['arr'] = []
             self._debug['folder_names']['arr'].append({'start': self._io.pos()})
             _t_folder_names = FalloutDat.Pstr(self._io, self, self._root)
@@ -50,7 +52,7 @@ class FalloutDat(KaitaiStruct):
         self._debug['folders']['start'] = self._io.pos()
         self.folders = [None] * (self.folder_count)
         for i in range(self.folder_count):
-            if not 'arr' in self._debug['folders']:
+            if 'arr' not in self._debug['folders']:
                 self._debug['folders']['arr'] = []
             self._debug['folders']['arr'].append({'start': self._io.pos()})
             _t_folders = FalloutDat.Folder(self._io, self, self._root)
@@ -101,7 +103,7 @@ class FalloutDat(KaitaiStruct):
             self._debug['files']['start'] = self._io.pos()
             self.files = [None] * (self.file_count)
             for i in range(self.file_count):
-                if not 'arr' in self._debug['files']:
+                if 'arr' not in self._debug['files']:
                     self._debug['files']['arr'] = []
                 self._debug['files']['arr'].append({'start': self._io.pos()})
                 _t_files = FalloutDat.File(self._io, self, self._root)

@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidSparse(KaitaiStruct):
     """The Android sparse format is a format to more efficiently store files
@@ -55,7 +57,7 @@ class AndroidSparse(KaitaiStruct):
         self._debug['chunks']['start'] = self._io.pos()
         self.chunks = [None] * (self.header.num_chunks)
         for i in range(self.header.num_chunks):
-            if not 'arr' in self._debug['chunks']:
+            if 'arr' not in self._debug['chunks']:
                 self._debug['chunks']['arr'] = []
             self._debug['chunks']['arr'].append({'start': self._io.pos()})
             _t_chunks = AndroidSparse.Chunk(self._io, self, self._root)
@@ -77,7 +79,7 @@ class AndroidSparse(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x3A\xFF\x26\xED":
+            if self.magic != b"\x3A\xFF\x26\xED":
                 raise kaitaistruct.ValidationNotEqualError(b"\x3A\xFF\x26\xED", self.magic, self._io, u"/types/file_header_prefix/seq/0")
             self._debug['version']['start'] = self._io.pos()
             self.version = AndroidSparse.Version(self._io, self, self._root)
@@ -104,7 +106,7 @@ class AndroidSparse(KaitaiStruct):
             self.block_size = self._io.read_u4le()
             self._debug['block_size']['end'] = self._io.pos()
             _ = self.block_size
-            if not (_ % 4) == 0:
+            if _ % 4 != 0:
                 raise kaitaistruct.ValidationExprError(self.block_size, self._io, u"/types/file_header/seq/1")
             self._debug['num_blocks']['start'] = self._io.pos()
             self.num_blocks = self._io.read_u4le()
@@ -178,7 +180,11 @@ class AndroidSparse(KaitaiStruct):
                 self._debug['len_chunk']['start'] = self._io.pos()
                 self.len_chunk = self._io.read_u4le()
                 self._debug['len_chunk']['end'] = self._io.pos()
-                if not self.len_chunk == ((self._root.header.len_chunk_header + self.len_body_expected) if self.len_body_expected != -1 else self.len_chunk):
+                if self.len_chunk != (
+                    (self._root.header.len_chunk_header + self.len_body_expected)
+                    if self.len_body_expected != -1
+                    else self.len_chunk
+                ):
                     raise kaitaistruct.ValidationNotEqualError(((self._root.header.len_chunk_header + self.len_body_expected) if self.len_body_expected != -1 else self.len_chunk), self.len_chunk, self._io, u"/types/chunk/types/chunk_header/seq/3")
 
             @property
@@ -227,7 +233,7 @@ class AndroidSparse(KaitaiStruct):
             self._debug['major']['start'] = self._io.pos()
             self.major = self._io.read_u2le()
             self._debug['major']['end'] = self._io.pos()
-            if not self.major == 1:
+            if self.major != 1:
                 raise kaitaistruct.ValidationNotEqualError(1, self.major, self._io, u"/types/version/seq/0")
             self._debug['minor']['start'] = self._io.pos()
             self.minor = self._io.read_u2le()

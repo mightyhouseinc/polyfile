@@ -8,15 +8,9 @@ from . import serialization
 @serialization.serializable
 class TrieNode:
     def __init__(self, value=None, sources=None, _children=None):
-        if _children is None:
-            self._children: Mapping[object, TrieNode] = {}
-        else:
-            self._children = _children
+        self._children = {} if _children is None else _children
         self.value = value
-        if sources is not None:
-            self._sources = set(sources)
-        else:
-            self._sources = set()
+        self._sources = set(sources) if sources is not None else set()
 
     def __repr__(self):
         return f"{self.__class__.__name__}(value={self.value!r}, sources={self.sources!r}, _children={self._children!r})"
@@ -44,18 +38,12 @@ class TrieNode:
             first, remainder, n = value, (), 1
         else:
             first, remainder, n = self._car_cdr_len(value)
-        if n == 1:
-            return first in self._children
-        else:
-            return self._find(first, remainder, n)
+        return first in self._children if n == 1 else self._find(first, remainder, n)
 
     @staticmethod
     def _car_cdr_len(sequence):
         n = len(sequence)
-        if n == 0:
-            first = None
-        else:
-            first = sequence[0]
+        first = None if n == 0 else sequence[0]
         return first, sequence[1:], n
 
     def _find(self, first, remainder, n):
@@ -90,10 +78,7 @@ class TrieNode:
             first, sequence, n = self._car_cdr_len(sequence)
             if n == 0:
                 break
-            if first in node:
-                node = node[first]
-            else:
-                node = node._add_child(first)
+            node = node[first] if first in node else node._add_child(first)
         node._sources.add(source)
         return node
 
@@ -108,9 +93,8 @@ class TrieNode:
             yield from iter(self._sources)
             for child in self:
                 yield from child.find_prefix(prefix)
-        else:
-            if first in self._children:
-                yield from self[first].find_prefix(remainder)
+        elif first in self._children:
+            yield from self[first].find_prefix(remainder)
 
     def bfs(self):
         queue = deque([self])
@@ -127,7 +111,7 @@ class TrieNode:
             yield tail
             children = tail._children.values()
             stack.extend(child for child in children if id(child) not in visited)
-            visited |= set(id(c) for c in children)
+            visited |= {id(c) for c in children}
 
     def serialize(self):
         return self.value, self._sources, self._children

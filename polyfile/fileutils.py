@@ -70,10 +70,7 @@ class PathOrStdin:
             self._tempfile = None
 
     def __enter__(self) -> str:
-        if self._tempfile is None:
-            return self.path
-        else:
-            return self._tempfile.__enter__()
+        return self.path if self._tempfile is None else self._tempfile.__enter__()
 
     def __exit__(self, *args, **kwargs):
         if self._tempfile is not None:
@@ -83,10 +80,7 @@ class PathOrStdin:
 class PathOrStdout(ContextManager[TextIO]):
     def __init__(self, path: str):
         self.path: str = path
-        if self.path == '-':
-            self._tempfile: Optional[TextIO] = sys.stdout
-        else:
-            self._tempfile = None
+        self._tempfile = sys.stdout if self.path == '-' else None
 
     def __enter__(self) -> TextIO:
         if self._tempfile is None:
@@ -241,10 +235,7 @@ class FileStream(IO):
             start_offset = self.offset()
             end_offset = start_offset + len(self)
             index = filecontent.find(byte_sequence, start_offset, end_offset)
-            if start_offset <= index < end_offset:
-                return index - start_offset
-            else:
-                return -1
+            return index - start_offset if start_offset <= index < end_offset else -1
 
     @property
     def content(self) -> bytes:
@@ -256,6 +247,9 @@ class FileStream(IO):
         return self.content
 
     def tempfile(self, prefix=None, suffix=None):
+
+
+
         class FSTempfile:
             def __init__(self, file_stream: FileStream):
                 self._temp = None
@@ -266,10 +260,10 @@ class FileStream(IO):
                 with self._fs.save_pos():
                     self._fs.seek(0)
                     while True:
-                        b = self._fs.read(1048576)  # write 1 MiB at a time
-                        if not b:
+                        if b := self._fs.read(1048576):
+                            self._temp.write(b)
+                        else:
                             break
-                        self._temp.write(b)
                 self._temp.flush()
                 self._temp.close()
                 return self._temp.name
@@ -278,6 +272,8 @@ class FileStream(IO):
                 if self._temp is not None:
                     os.unlink(self._temp.name)
                     self._temp = None
+
+
         return FSTempfile(self)
 
     def __getitem__(self, index) -> Union[bytes, "FileStream"]:

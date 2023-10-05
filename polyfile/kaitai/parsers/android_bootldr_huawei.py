@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class AndroidBootldrHuawei(KaitaiStruct):
     """Format of `bootloader-*.img` files found in factory images of certain Android devices from Huawei:
@@ -71,7 +73,7 @@ class AndroidBootldrHuawei(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(4)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\x3C\xD6\x1A\xCE":
+            if self.magic != b"\x3C\xD6\x1A\xCE":
                 raise kaitaistruct.ValidationNotEqualError(b"\x3C\xD6\x1A\xCE", self.magic, self._io, u"/types/meta_hdr/seq/0")
             self._debug['version']['start'] = self._io.pos()
             self.version = AndroidBootldrHuawei.Version(self._io, self, self._root)
@@ -118,7 +120,7 @@ class AndroidBootldrHuawei(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = AndroidBootldrHuawei.ImageHdrEntry(self._io, self, self._root)

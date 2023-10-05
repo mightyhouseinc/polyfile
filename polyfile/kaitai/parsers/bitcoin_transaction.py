@@ -8,7 +8,9 @@ from enum import Enum
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class BitcoinTransaction(KaitaiStruct):
     """
@@ -33,7 +35,7 @@ class BitcoinTransaction(KaitaiStruct):
         self._debug['vins']['start'] = self._io.pos()
         self.vins = [None] * (self.num_vins)
         for i in range(self.num_vins):
-            if not 'arr' in self._debug['vins']:
+            if 'arr' not in self._debug['vins']:
                 self._debug['vins']['arr'] = []
             self._debug['vins']['arr'].append({'start': self._io.pos()})
             _t_vins = BitcoinTransaction.Vin(self._io, self, self._root)
@@ -48,7 +50,7 @@ class BitcoinTransaction(KaitaiStruct):
         self._debug['vouts']['start'] = self._io.pos()
         self.vouts = [None] * (self.num_vouts)
         for i in range(self.num_vouts):
-            if not 'arr' in self._debug['vouts']:
+            if 'arr' not in self._debug['vouts']:
                 self._debug['vouts']['arr'] = []
             self._debug['vouts']['arr'].append({'start': self._io.pos()})
             _t_vouts = BitcoinTransaction.Vout(self._io, self, self._root)
@@ -88,7 +90,7 @@ class BitcoinTransaction(KaitaiStruct):
             self._debug['end_of_vin']['start'] = self._io.pos()
             self.end_of_vin = self._io.read_bytes(4)
             self._debug['end_of_vin']['end'] = self._io.pos()
-            if not self.end_of_vin == b"\xFF\xFF\xFF\xFF":
+            if self.end_of_vin != b"\xFF\xFF\xFF\xFF":
                 raise kaitaistruct.ValidationNotEqualError(b"\xFF\xFF\xFF\xFF", self.end_of_vin, self._io, u"/types/vin/seq/4")
 
         class ScriptSignature(KaitaiStruct):
@@ -136,7 +138,7 @@ class BitcoinTransaction(KaitaiStruct):
                     self._debug['sequence']['start'] = self._io.pos()
                     self.sequence = self._io.read_bytes(1)
                     self._debug['sequence']['end'] = self._io.pos()
-                    if not self.sequence == b"\x30":
+                    if self.sequence != b"\x30":
                         raise kaitaistruct.ValidationNotEqualError(b"\x30", self.sequence, self._io, u"/types/vin/types/script_signature/types/der_signature/seq/0")
                     self._debug['len_sig']['start'] = self._io.pos()
                     self.len_sig = self._io.read_u1()
@@ -144,7 +146,7 @@ class BitcoinTransaction(KaitaiStruct):
                     self._debug['sep_1']['start'] = self._io.pos()
                     self.sep_1 = self._io.read_bytes(1)
                     self._debug['sep_1']['end'] = self._io.pos()
-                    if not self.sep_1 == b"\x02":
+                    if self.sep_1 != b"\x02":
                         raise kaitaistruct.ValidationNotEqualError(b"\x02", self.sep_1, self._io, u"/types/vin/types/script_signature/types/der_signature/seq/2")
                     self._debug['len_sig_r']['start'] = self._io.pos()
                     self.len_sig_r = self._io.read_u1()
@@ -155,7 +157,7 @@ class BitcoinTransaction(KaitaiStruct):
                     self._debug['sep_2']['start'] = self._io.pos()
                     self.sep_2 = self._io.read_bytes(1)
                     self._debug['sep_2']['end'] = self._io.pos()
-                    if not self.sep_2 == b"\x02":
+                    if self.sep_2 != b"\x02":
                         raise kaitaistruct.ValidationNotEqualError(b"\x02", self.sep_2, self._io, u"/types/vin/types/script_signature/types/der_signature/seq/5")
                     self._debug['len_sig_s']['start'] = self._io.pos()
                     self.len_sig_s = self._io.read_u1()

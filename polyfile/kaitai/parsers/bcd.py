@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Bcd(KaitaiStruct):
     """BCD (Binary Coded Decimals) is a common way to encode integer
@@ -52,18 +54,18 @@ class Bcd(KaitaiStruct):
         self._debug['digits']['start'] = self._io.pos()
         self.digits = [None] * (self.num_digits)
         for i in range(self.num_digits):
-            if not 'arr' in self._debug['digits']:
+            if 'arr' not in self._debug['digits']:
                 self._debug['digits']['arr'] = []
             self._debug['digits']['arr'].append({'start': self._io.pos()})
             _on = self.bits_per_digit
             if _on == 4:
-                if not 'arr' in self._debug['digits']:
+                if 'arr' not in self._debug['digits']:
                     self._debug['digits']['arr'] = []
                 self._debug['digits']['arr'].append({'start': self._io.pos()})
                 self.digits[i] = self._io.read_bits_int_be(4)
                 self._debug['digits']['arr'][i]['end'] = self._io.pos()
             elif _on == 8:
-                if not 'arr' in self._debug['digits']:
+                if 'arr' not in self._debug['digits']:
                     self._debug['digits']['arr'] = []
                 self._debug['digits']['arr'].append({'start': self._io.pos()})
                 self.digits[i] = self._io.read_u1()

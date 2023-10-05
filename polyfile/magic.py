@@ -74,7 +74,7 @@ def unescape(to_unescape: Union[str, bytes]) -> bytes:
         if escaped is not None:
             char = chr(c)
             if escaped.isnumeric():
-                if not char.isnumeric() or len(escaped) == 3 or not int(char) < 8:
+                if not char.isnumeric() or len(escaped) == 3 or int(char) >= 8:
                     # this is an octal escape sequence like "\1", "\12", or "\123"
                     b.append(int(escaped, 8))
                     escaped = None
@@ -292,10 +292,7 @@ class Offset(ABC):
 class InvalidOffsetError(IndexError):
     def __init__(self, message: Optional[str] = None, offset: Optional[Offset] = None):
         if message is None:
-            if offset is not None:
-                message = f"Invalid Offset: {offset!r}"
-            else:
-                message = "Invalid Offset"
+            message = "Invalid Offset" if offset is None else f"Invalid Offset: {offset!r}"
         super().__init__(message)
         self.offset: Optional[Offset] = offset
 
@@ -322,7 +319,7 @@ class NamedAbsoluteOffset(AbsoluteOffset):
         self.test: NamedTest = test
 
     def to_absolute(self, data: bytes, last_match: Optional[TestResult], allow_invalid: bool = False) -> int:
-        while last_match is not None and not last_match.test is self.test:
+        while last_match is not None and last_match.test is not self.test:
             last_match = last_match.parent
 
         if last_match is not None:
@@ -393,7 +390,7 @@ class IndirectOffset(Offset):
         self.endianness: Endianness = endianness
         self.signed: bool = signed
         self.post_process: Callable[[int], int] = post_process
-        if self.endianness != Endianness.LITTLE and self.endianness != endianness.BIG:
+        if self.endianness not in [Endianness.LITTLE, endianness.BIG]:
             raise ValueError(f"Invalid endianness: {endianness!r}")
         elif num_bytes not in (1, 2, 4, 8, IndirectOffset.OctalIndirectOffset):
             raise ValueError(f"Invalid number of bytes: {num_bytes}")
@@ -429,10 +426,7 @@ class IndirectOffset(Offset):
             fmt = "I"
         if self.signed:
             fmt = fmt.lower()
-        if self.endianness == Endianness.LITTLE:
-            fmt = f"<{fmt}"
-        else:
-            fmt = f">{fmt}"
+        fmt = f"<{fmt}" if self.endianness == Endianness.LITTLE else f">{fmt}"
         offset = self.offset.to_absolute(data, last_match)
         to_unpack = data[offset:offset + self.num_bytes]
         if len(to_unpack) < self.num_bytes:
@@ -562,7 +556,7 @@ class MatchContext:
 
     @staticmethod
     def load(stream_or_path: Union[str, Path, BinaryIO], only_match_mime: bool = False) -> "MatchContext":
-        if isinstance(stream_or_path, str) or isinstance(stream_or_path, Path):
+        if isinstance(stream_or_path, (str, Path)):
             with open(stream_or_path, "rb") as f:
                 return MatchContext.load(f, only_match_mime)
         if hasattr(stream_or_path, "name") and stream_or_path.name is not None:
@@ -622,10 +616,7 @@ class TernaryMessage(Message, ABC):
 
 class TernaryExecutableMessage(TernaryMessage):
     def resolve(self, context: MatchContext) -> str:
-        if context.is_executable:
-            return self.true_value
-        else:
-            return self.false_value
+        return self.true_value if context.is_executable else self.false_value
 
     TERNARY_EXECUTABLE_PATTERN: Pattern[str] = re.compile(
         r"^(?P<before>.*?)\${x\?(?P<true>[^:]+):(?P<false>[^}]+)}(?P<after>.*)$"
@@ -737,28 +728,31 @@ class MagicTest(ABC):
             if self.can_be_indirect:
                 # indirect tests can execute any other (binary) test, so classify ourselves as binary
                 self._type = TestType.BINARY
+            elif any(bool(child.test_type & TestType.BINARY) for child in self.children):
+                self._type = TestType.BINARY
             else:
-                if any(bool(child.test_type & TestType.BINARY) for child in self.children):
-                    self._type = TestType.BINARY
-                else:
-                    self._type = self.subtest_type()
-                    if (self._type == TestType.UNKNOWN and self.children) or bool(self._type & TestType.TEXT):
+                self._type = self.subtest_type()
+                if (self._type == TestType.UNKNOWN and self.children) or bool(self._type & TestType.TEXT):
                         # A pattern is considered to be a text test when all its patterns are text patterns;
                         # otherwise, it is considered to be a binary pattern.
-                        if all(bool(child.test_type & TestType.TEXT) for child in self.children):
-                            self._type = TestType.TEXT
-                        else:
-                            self._type = TestType.UNKNOWN
+                    self._type = (
+                        TestType.TEXT
+                        if all(
+                            bool(child.test_type & TestType.TEXT)
+                            for child in self.children
+                        )
+                        else TestType.UNKNOWN
+                    )
             delattr(self, "__calculating_test_type")
         return self._type
 
     @test_type.setter
     def test_type(self, value: TestType):
-        if self._type != TestType.UNKNOWN:
-            if value != self._type:
-                raise ValueError(f"Cannot assign type {value} to test {self} because it already has value {value}")
-        else:
+        if self._type == TestType.UNKNOWN:
             self._type = value
+
+        elif value != self._type:
+            raise ValueError(f"Cannot assign type {value} to test {self} because it already has value {value}")
 
     @abstractmethod
     def subtest_type(self) -> TestType:
@@ -995,10 +989,7 @@ class DataTypeMatch:
 
     def __init__(self, raw_match: Optional[bytes] = None, value: Optional[Any] = None, initial_offset: int = 0):
         self.raw_match: Optional[bytes] = raw_match
-        if value is None and raw_match is not None:
-            self.value: Optional[bytes] = raw_match
-        else:
-            self.value = value
+        self.value = raw_match if value is None and raw_match is not None else value
         self.initial_offset: int = initial_offset
 
     def __bool__(self):
@@ -1095,7 +1086,7 @@ class GUIDType(DataType[Union[UUID, UUIDWildcard]]):
         # there is a bug in the `asf` definition where a guid is missing its last two characters:
         if specification.strip().upper() == "B61BE100-5B4E-11CF-A8FD-00805F5C44":
             specification = "B61BE100-5B4E-11CF-A8FD-00805F5C442B"
-        return UUID(str(specification.strip()))
+        return UUID(specification.strip())
 
     def match(self, data: bytes, expected: Union[UUID, UUIDWildcard]) -> DataTypeMatch:
         if len(data) < 16:
@@ -1210,10 +1201,7 @@ class StringTest(ABC):
                 optional_blanks=optional_blanks,
                 full_word_match=full_word_match
             )
-        if negate:
-            return NegatedStringTest(test)
-        else:
-            return test
+        return NegatedStringTest(test) if negate else test
 
 
 class StringWildcard(StringTest):
@@ -1403,14 +1391,12 @@ class StringMatch(StringTest):
         return self._is_always_text
 
     def matches(self, data: bytes) -> DataTypeMatch:
-        m = self.pattern.match(data)
-        if m:
+        if m := self.pattern.match(data):
             return self.post_process(bytes(m.group(0)))
         return DataTypeMatch.INVALID
 
     def search(self, data: bytes) -> DataTypeMatch:
-        m = self.pattern.search(data)
-        if m:
+        if m := self.pattern.search(data):
             return self.post_process(bytes(m.group(0)), initial_offset=m.start())
         return DataTypeMatch.INVALID
 
@@ -1434,13 +1420,10 @@ class StringType(DataType[StringTest]):
                     optional_blanks, trim, force_text)):
             name = "string"
         else:
-            if num_bytes is not None:
-                name = f"{num_bytes}/"
-            else:
-                name = ""
+            name = f"{num_bytes}/" if num_bytes is not None else ""
             name = f"string/{name}{['', 'W'][compact_whitespace]}{['', 'w'][optional_blanks]}"\
-                   f"{['', 'C'][case_insensitive_upper]}{['', 'c'][case_insensitive_lower]}"\
-                   f"{['', 'T'][trim]}{['', 'f'][full_word_match]}{['', 't'][force_text]}"
+                       f"{['', 'C'][case_insensitive_upper]}{['', 'c'][case_insensitive_lower]}"\
+                       f"{['', 'T'][trim]}{['', 'f'][full_word_match]}{['', 't'][force_text]}"
         super().__init__(name)
         self.case_insensitive_lower: bool = case_insensitive_lower
         self.case_insensitive_upper: bool = case_insensitive_upper
@@ -1478,16 +1461,11 @@ class StringType(DataType[StringTest]):
         m = cls.STRING_TYPE_FORMAT.match(format_str)
         if not m:
             raise ValueError(f"Invalid string type declaration: {format_str!r}")
-        if m.group("numbytes") is None:
-            num_bytes: Optional[int] = None
-        else:
-            num_bytes = int(m.group("numbytes"))
-        if m.group("opts") is None:
-            options: Iterable[str] = ()
-        else:
-            options = m.group("opts")
-        unsupported_options = {opt for opt in options if opt not in "/WwcCtbTf"}
-        if unsupported_options:
+        num_bytes = None if m.group("numbytes") is None else int(m.group("numbytes"))
+        options = () if m.group("opts") is None else m.group("opts")
+        if unsupported_options := {
+            opt for opt in options if opt not in "/WwcCtbTf"
+        }:
             log.warning(f"{format_str!r} has invalid option(s) that will be ignored: {', '.join(unsupported_options)}")
         return StringType(
             case_insensitive_lower="c" in options,
@@ -1524,10 +1502,7 @@ class SearchType(StringType):
             trim=trim
         )
         self.repetitions: Optional[int] = repetitions
-        if repetitions is None:
-            rep_str = ""
-        else:
-            rep_str = f"/{repetitions}"
+        rep_str = "" if repetitions is None else f"/{repetitions}"
         assert self.name.startswith("string")
         self.name = f"search{rep_str}{self.name[6:]}"
         self.match_to_start: bool = match_to_start
@@ -1568,10 +1543,7 @@ class SearchType(StringType):
             flags = m.group("flags2")
         else:
             raise ValueError(f"Invalid search type declaration: {format_str!r}")
-        if flags is None:
-            options: Iterable[str] = ()
-        else:
-            options = flags
+        options = () if flags is None else flags
         return SearchType(
             repetitions=repetitions,
             case_insensitive_lower="c" in options,
@@ -1591,20 +1563,14 @@ class PascalStringType(DataType[StringTest]):
             endianness: Endianness = Endianness.BIG,
             count_includes_length: bool = False
     ):
-        if endianness != Endianness.BIG and endianness != Endianness.LITTLE:
+        if endianness not in [Endianness.BIG, Endianness.LITTLE]:
             raise ValueError("Endianness must be either BIG or LITTLE")
         elif byte_length == 1:
             modifier = "B"
         elif byte_length == 2:
-            if endianness == Endianness.BIG:
-                modifier = "H"
-            else:
-                modifier = "h"
+            modifier = "H" if endianness == Endianness.BIG else "h"
         elif byte_length == 4:
-            if endianness == Endianness.BIG:
-                modifier = "L"
-            else:
-                modifier = "l"
+            modifier = "L" if endianness == Endianness.BIG else "l"
         else:
             raise ValueError("byte_length must be either 1, 2, or 4")
         if count_includes_length:
@@ -1651,10 +1617,7 @@ class PascalStringType(DataType[StringTest]):
         m = cls.PSTRING_TYPE_FORMAT.match(format_str)
         if not m:
             raise ValueError(f"Invalid pstring type declaration: {format_str!r}")
-        if m.group(1) is None:
-            options: Iterable[str] = ()
-        else:
-            options = m.group(1)
+        options = () if m.group(1) is None else m.group(1)
         if "H" in options:
             byte_length = 2
             endianness = Endianness.BIG
@@ -1707,10 +1670,7 @@ class RegexType(DataType[Pattern[bytes]]):
             trim: bool = False
     ):
         if length is None:
-            if limit_lines:
-                length = 8 * 1024 // 80  # libmagic assumes 80 bytes per line
-            else:
-                length = 8 * 1024  # libmagic limits to 8KiB by default
+            length = 8 * 1024 // 80 if limit_lines else 8 * 1024
         self.limit_lines: bool = limit_lines
         self.length: int = length
         self.case_insensitive: bool = case_insensitive
@@ -1752,8 +1712,7 @@ class RegexType(DataType[Pattern[bytes]]):
                 if line_offset < 0:
                     return DataTypeMatch.INVALID
                 line = data[offset:line_offset]
-                m = expected.match(line)
-                if m:
+                if m := expected.match(line):
                     match = data[:offset + m.end()]
                     try:
                         value = match.decode("utf-8")
@@ -1763,19 +1722,17 @@ class RegexType(DataType[Pattern[bytes]]):
                         value = value.strip()
                     return DataTypeMatch(match, value)
                 offset = line_offset + 1
+        elif m := expected.search(data[: self.length]):
+            match = data[:m.end()]
+            try:
+                value = match.decode("utf-8")
+            except UnicodeDecodeError:
+                value = match
+            if self.trim:
+                value = value.strip()
+            return DataTypeMatch(match, value)
         else:
-            m = expected.search(data[:self.length])
-            if m:
-                match = data[:m.end()]
-                try:
-                    value = match.decode("utf-8")
-                except UnicodeDecodeError:
-                    value = match
-                if self.trim:
-                    value = value.strip()
-                return DataTypeMatch(match, value)
-            else:
-                return DataTypeMatch.INVALID
+            return DataTypeMatch.INVALID
 
     REGEX_TYPE_FORMAT: Pattern[str] = re.compile(r"^regex(/(?P<length>\d+)?(?P<flags>[cslT]*)(b\d*)?)?$")
     # NOTE: some specification files like `cad` use `regex/b`, which is undocumented, and it's unclear from the libmagic
@@ -1786,14 +1743,8 @@ class RegexType(DataType[Pattern[bytes]]):
         m = cls.REGEX_TYPE_FORMAT.match(format_str)
         if not m:
             raise ValueError(f"Invalid regex type declaration: {format_str!r}")
-        if m.group("flags") is None:
-            options: Iterable[str] = ()
-        else:
-            options = m.group("flags")
-        if m.group("length") is None:
-            length: Optional[int] = None
-        else:
-            length = int(m.group("length"))
+        options = () if m.group("flags") is None else m.group("flags")
+        length = None if m.group("length") is None else int(m.group("length"))
         return RegexType(
             length=length,
             case_insensitive="c" in options,
@@ -2100,8 +2051,7 @@ class ConstantMatchTest(MagicTest, Generic[T]):
         return self.offset.to_absolute(data, parent_match, self.data_type.allows_invalid_offsets(self.constant))
 
     def test(self, data: bytes, absolute_offset: int, parent_match: Optional[TestResult]) -> TestResult:
-        match = self.data_type.match(data[absolute_offset:], self.constant)
-        if match:
+        if match := self.data_type.match(data[absolute_offset:], self.constant):
             return MatchedTest(self, offset=absolute_offset + match.initial_offset, length=len(match.raw_match),
                                value=match.value, parent=parent_match)
         else:
@@ -2362,9 +2312,8 @@ class ClearTest(MagicTest):
     def test(self, data: bytes, absolute_offset: int, parent_match: Optional[TestResult]) -> MatchedTest:
         if parent_match is None:
             return MatchedTest(self, offset=absolute_offset, length=0, value=None)
-        else:
-            parent_match.child_matched = False
-            return MatchedTest(self, offset=absolute_offset, length=0, parent=parent_match, value=None)
+        parent_match.child_matched = False
+        return MatchedTest(self, offset=absolute_offset, length=0, parent=parent_match, value=None)
 
 
 class DERTest(MagicTest):
@@ -2397,7 +2346,9 @@ class PlainTextTest(MagicTest):
 
     def test(self, data: bytes, absolute_offset: int, parent_match: Optional[TestResult]) -> TestResult:
         if not isinstance(self.message, ConstantMessage) or self.message.message:
-            raise ValueError(f"A new PlainTextTest must be constructed for each call to .test")
+            raise ValueError(
+                "A new PlainTextTest must be constructed for each call to .test"
+            )
         detector = UniversalDetector()
         offset = absolute_offset
         while not detector.done and offset < min(len(data), 5000000):
@@ -2406,18 +2357,17 @@ class PlainTextTest(MagicTest):
             detector.feed(data[offset:offset+1024])
             offset += 1024
         detector.close()
-        if detector.result["confidence"] >= self.minimum_encoding_confidence:
-            encoding = detector.result["encoding"]
-            try:
-                value = data[absolute_offset:].decode(encoding)
-            except UnicodeDecodeError:
-                value = data[absolute_offset:]
-            self.message = ConstantMessage(f"{encoding} text")
-            return MatchedTest(self, offset=absolute_offset, length=len(data) - absolute_offset, parent=parent_match,
-                               value=value)
-        else:
+        if detector.result["confidence"] < self.minimum_encoding_confidence:
             return FailedTest(self, offset=absolute_offset, parent=parent_match, message="the data do not appear to "
                                                                                          "be encoded in a text format")
+        encoding = detector.result["encoding"]
+        try:
+            value = data[absolute_offset:].decode(encoding)
+        except UnicodeDecodeError:
+            value = data[absolute_offset:]
+        self.message = ConstantMessage(f"{encoding} text")
+        return MatchedTest(self, offset=absolute_offset, length=len(data) - absolute_offset, parent=parent_match,
+                           value=value)
 
 
 class OctetStreamTest(MagicTest):
@@ -2465,7 +2415,7 @@ def _split_with_escapes(text: str) -> Tuple[str, str]:
                 first_length -= 1
                 delimiter_length = 2
             break
-        elif c == " " or c == "\t":
+        elif c in [" ", "\t"]:
             break
         first_length += 1
     return text[:first_length], text[first_length + delimiter_length:]
@@ -2510,13 +2460,9 @@ class Match:
         return str(writer)
 
     def __bool__(self):
-        return any(m for m in self.mimetypes) or any(e for e in self.extensions) or bool(self.message())
+        return any(self.mimetypes) or any(self.extensions) or bool(self.message())
 
     def __len__(self):
-        if self._result_iter is not None:
-            # we have not yet finished collecting the results
-            for _ in self:
-                pass
         assert self._result_iter is None
         return len(self._results)
 
@@ -2555,7 +2501,7 @@ class Match:
                 result_str = m[1:]
             else:
                 result_str = m
-                if msg and not msg[-1] in " \t\r\n\v\f":
+                if msg and msg[-1] not in " \t\r\n\v\f":
                     msg = f"{msg} "
             if "%u" in result_str and result.value < 0:
                 # sometimes we parsed a negative value and want to print it as an unsigned int:
@@ -2779,80 +2725,79 @@ class MagicMatcher:
             test = NamedTest(name=test_str, offset=offset, message=message)
             matcher.named_tests[test_str] = test
             test.source_info = SourceInfo(def_file, line_number, line)
-        else:
-            if data_type == "default":
-                if parent is None:
-                    raise NotImplementedError("TODO: Add support for default tests at level 0")
-                test = DefaultTest(offset=offset, message=message, parent=parent)
-            elif data_type == "clear":
-                if parent is None:
-                    raise NotImplementedError("TODO: Add support for clear tests at level 0")
-                test = ClearTest(offset=offset, message=message, parent=parent)
-            elif data_type == "offset":
-                expected_value = IntegerValue.parse(test_str, num_bytes=8)
-                test = OffsetMatchTest(offset=offset, value=expected_value, message=message,
-                                       parent=parent)
-            elif data_type == "json":
-                test = JSONTest(offset=offset, message=message, parent=parent)
-            elif data_type == "csv":
-                test = CSVTest(offset=offset, message=message, parent=parent)
-            elif data_type == "indirect" or data_type == "indirect/r":
-                test = IndirectTest(matcher=matcher, offset=offset,
-                                    relative=m.group("data_type").endswith("r"),
-                                    message=message, parent=parent)
-            elif data_type == "use":
-                if test_str.startswith("^"):
-                    flip_endianness = True
-                    test_str = test_str[1:]
-                elif test_str.startswith("\\^"):
-                    flip_endianness = True
-                    test_str = test_str[2:]
-                else:
-                    flip_endianness = False
-                if test_str not in matcher.named_tests:
-                    late_binding = True
-
-                    class LateBindingNamedTest(NamedTest):
-                        def __init__(self):
-                            super().__init__(test_str, offset=AbsoluteOffset(0))
-
-                    named_test: NamedTest = LateBindingNamedTest()
-                else:
-                    late_binding = False
-                    named_test = matcher.named_tests[test_str]
-                # named_test might be a string here (the test name) rather than an actual NamedTest object.
-                # This will happen if the named test is defined after the use (late binding).
-                # We will resolve this after the entire file is parsed.
-                test = UseTest(  # type: ignore
-                    named_test,
-                    offset=offset,
-                    message=message,
-                    parent=parent,
-                    flip_endianness=flip_endianness,
-                    late_binding=late_binding
-                )
-            elif data_type == "der":
-                # TODO: Update this as necessary once we fully implement the DERTest
-                test = DERTest(offset=offset, message=message, parent=parent)
+        elif data_type == "default":
+            if parent is None:
+                raise NotImplementedError("TODO: Add support for default tests at level 0")
+            test = DefaultTest(offset=offset, message=message, parent=parent)
+        elif data_type == "clear":
+            if parent is None:
+                raise NotImplementedError("TODO: Add support for clear tests at level 0")
+            test = ClearTest(offset=offset, message=message, parent=parent)
+        elif data_type == "offset":
+            expected_value = IntegerValue.parse(test_str, num_bytes=8)
+            test = OffsetMatchTest(offset=offset, value=expected_value, message=message,
+                                   parent=parent)
+        elif data_type == "json":
+            test = JSONTest(offset=offset, message=message, parent=parent)
+        elif data_type == "csv":
+            test = CSVTest(offset=offset, message=message, parent=parent)
+        elif data_type in ["indirect", "indirect/r"]:
+            test = IndirectTest(matcher=matcher, offset=offset,
+                                relative=m.group("data_type").endswith("r"),
+                                message=message, parent=parent)
+        elif data_type == "use":
+            if test_str.startswith("^"):
+                flip_endianness = True
+                test_str = test_str[1:]
+            elif test_str.startswith("\\^"):
+                flip_endianness = True
+                test_str = test_str[2:]
             else:
-                try:
-                    data_type = DataType.parse(data_type)
-                    # in some definitions a space is put after the "&" in a numeric datatype:
-                    if test_str in ("<", ">", "=", "!", "&", "^", "~"):
-                        # Some files will erroneously add whitespace between the operator and the
-                        # subsequent value:
-                        actual_operand, message = _split_with_escapes(message)
-                        test_str = f"{test_str}{actual_operand}"
-                    constant = data_type.parse_expected(test_str)
-                except ValueError as e:
-                    raise ValueError(f"{def_file!s} line {line_number}: {e!s}")
-                test = ConstantMatchTest(
-                    offset=offset,
-                    data_type=data_type,
-                    constant=constant,
-                    message=message,
-                    parent=parent
-                )
+                flip_endianness = False
+            if test_str in matcher.named_tests:
+                late_binding = False
+                named_test = matcher.named_tests[test_str]
+            else:
+                late_binding = True
+
+                class LateBindingNamedTest(NamedTest):
+                    def __init__(self):
+                        super().__init__(test_str, offset=AbsoluteOffset(0))
+
+                named_test: NamedTest = LateBindingNamedTest()
+            # named_test might be a string here (the test name) rather than an actual NamedTest object.
+            # This will happen if the named test is defined after the use (late binding).
+            # We will resolve this after the entire file is parsed.
+            test = UseTest(  # type: ignore
+                named_test,
+                offset=offset,
+                message=message,
+                parent=parent,
+                flip_endianness=flip_endianness,
+                late_binding=late_binding
+            )
+        elif data_type == "der":
+            # TODO: Update this as necessary once we fully implement the DERTest
+            test = DERTest(offset=offset, message=message, parent=parent)
+        else:
+            try:
+                data_type = DataType.parse(data_type)
+                # in some definitions a space is put after the "&" in a numeric datatype:
+                if test_str in ("<", ">", "=", "!", "&", "^", "~"):
+                    # Some files will erroneously add whitespace between the operator and the
+                    # subsequent value:
+                    actual_operand, message = _split_with_escapes(message)
+                    test_str = f"{test_str}{actual_operand}"
+                constant = data_type.parse_expected(test_str)
+            except ValueError as e:
+                raise ValueError(f"{def_file!s} line {line_number}: {e!s}")
+            test = ConstantMatchTest(
+                offset=offset,
+                data_type=data_type,
+                constant=constant,
+                message=message,
+                parent=parent
+            )
         test.source_info = SourceInfo(def_file, line_number, line)
         return test
 

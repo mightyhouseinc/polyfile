@@ -10,10 +10,7 @@ class PolyFileStruct(Struct):
 
     @property
     def match_name(self) -> str:
-        if self.__name__ is not None:
-            return self.__name__
-        else:
-            return self.__class__.__name__
+        return self.__name__ if self.__name__ is not None else self.__class__.__name__
 
     def match(self, matcher: Matcher, parent: Optional[Match] = None) -> Iterator[Submatch]:
         m = Submatch(

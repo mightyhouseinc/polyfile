@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Grub2Font(KaitaiStruct):
     """Bitmap font format for the GRUB 2 bootloader.
@@ -26,13 +28,13 @@ class Grub2Font(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(12)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\x46\x49\x4C\x45\x00\x00\x00\x04\x50\x46\x46\x32":
+        if self.magic != b"\x46\x49\x4C\x45\x00\x00\x00\x04\x50\x46\x46\x32":
             raise kaitaistruct.ValidationNotEqualError(b"\x46\x49\x4C\x45\x00\x00\x00\x04\x50\x46\x46\x32", self.magic, self._io, u"/seq/0")
         self._debug['sections']['start'] = self._io.pos()
         self.sections = []
         i = 0
         while True:
-            if not 'arr' in self._debug['sections']:
+            if 'arr' not in self._debug['sections']:
                 self._debug['sections']['arr'] = []
             self._debug['sections']['arr'].append({'start': self._io.pos()})
             _t_sections = Grub2Font.Section(self._io, self, self._root)
@@ -216,7 +218,7 @@ class Grub2Font(KaitaiStruct):
             self.characters = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['characters']:
+                if 'arr' not in self._debug['characters']:
                     self._debug['characters']['arr'] = []
                 self._debug['characters']['arr'].append({'start': self._io.pos()})
                 _t_characters = Grub2Font.ChixSection.Character(self._io, self, self._root)

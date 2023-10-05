@@ -278,18 +278,18 @@ class HttpVisitor(parser.NodeVisitor):
 
     def visit_request(self, node: Node):
         for child in node.children:
-            if child.name == "header":
+            if child.name == "body":
+                self.body_raw = child.value
+                if self.body_parsed is None:
+                    self.body_parsed = []
+
+            elif child.name == "header":
                 if self.headers is None:
                     # prevents weird reuse between instances in unittest.
                     # TODO kaoudis find out why? maybe bad test config?
                     self.headers = dict()
                 header_name, header_value = child.value.strip(whitespace).split(":", 1)
                 self.headers[header_name] = header_value.strip(whitespace)
-            if child.name == "body":
-                self.body_raw = child.value
-                if self.body_parsed is None:
-                    self.body_parsed = list()
-
             self.visit(child)
 
     def visit_start_line(self, node: Node):
@@ -432,47 +432,44 @@ class HttpVisitor(parser.NodeVisitor):
         filters.
         """
 
-        if hasattr(self, "trailer"):
-            disallowed_fields: Set = {
-                "Transfer-Encoding",
-                "Content-Length",
-                "Host",
-                "Cache-Control",
-                "Max-Forwards",
-                "TE",
-                "Authorization",
-                "Set-Cookie",
-                "Content-Encoding",
-                "Content-Type",
-                "Content-Range",
-                "Trailer",
-            }
+        if not hasattr(self, "trailer"):
+            return
+        disallowed_fields: Set = {
+            "Transfer-Encoding",
+            "Content-Length",
+            "Host",
+            "Cache-Control",
+            "Max-Forwards",
+            "TE",
+            "Authorization",
+            "Set-Cookie",
+            "Content-Encoding",
+            "Content-Type",
+            "Content-Range",
+            "Trailer",
+        }
 
-            trailer_field_names: Set = set(self.trailer.split(","))
-            allowed_trailer_field_names: Set = trailer_field_names - disallowed_fields
-            trailer_headers_string = []
+        trailer_field_names: Set = set(self.trailer.split(","))
+        allowed_trailer_field_names: Set = trailer_field_names - disallowed_fields
+        trailer_headers_string = [node.value for node in node_children]
+        # TODO kaoudis this is utterly ridiculous, clean it up
+        trailer_headers: List[str] = list(
+            filter(None, "".join(trailer_headers_string).split("\r\n"))
+        )
 
-            for node in node_children:
-                trailer_headers_string.append(node.value)
-
-            # TODO kaoudis this is utterly ridiculous, clean it up
-            trailer_headers: List[str] = list(
-                filter(None, "".join(trailer_headers_string).split("\r\n"))
-            )
-
-            for header in trailer_headers:
-                name, value = header.strip(whitespace).split(":", 1)
-                if name in allowed_trailer_field_names:
-                    # A recipient that retains a received trailer field MUST
-                    # either store/forward the trailer field separately from
-                    # the received header fields or merge the received trailer
-                    # field into the header section. A recipient MUST NOT merge
-                    # a received trailer field into the header section unless
-                    # its corresponding header field definition explicitly
-                    # permits and instructs how the trailer field value can be
-                    # safely merged.
-                    self.headers[name] = value.strip(whitespace)
-                    self.__setattr__(name.lower(), value)
+        for header in trailer_headers:
+            name, value = header.strip(whitespace).split(":", 1)
+            if name in allowed_trailer_field_names:
+                # A recipient that retains a received trailer field MUST
+                # either store/forward the trailer field separately from
+                # the received header fields or merge the received trailer
+                # field into the header section. A recipient MUST NOT merge
+                # a received trailer field into the header section unless
+                # its corresponding header field definition explicitly
+                # permits and instructs how the trailer field value can be
+                # safely merged.
+                self.headers[name] = value.strip(whitespace)
+                self.__setattr__(name.lower(), value)
 
     def _accumulate_chunks(self, node_children: List[Node], length: int = 0) -> int:
         """An utterly hideous yet hopefully fairly close interpretation of the chunk accumulation algorithm from rfc7230 and rfc9112."""

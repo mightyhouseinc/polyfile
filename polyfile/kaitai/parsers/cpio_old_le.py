@@ -7,7 +7,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class CpioOldLe(KaitaiStruct):
     SEQ_FIELDS = ["files"]
@@ -22,7 +24,7 @@ class CpioOldLe(KaitaiStruct):
         self.files = []
         i = 0
         while not self._io.is_eof():
-            if not 'arr' in self._debug['files']:
+            if 'arr' not in self._debug['files']:
                 self._debug['files']['arr'] = []
             self._debug['files']['arr'].append({'start': self._io.pos()})
             _t_files = CpioOldLe.File(self._io, self, self._root)
@@ -52,13 +54,13 @@ class CpioOldLe(KaitaiStruct):
             self._debug['string_terminator']['start'] = self._io.pos()
             self.string_terminator = self._io.read_bytes(1)
             self._debug['string_terminator']['end'] = self._io.pos()
-            if not self.string_terminator == b"\x00":
+            if self.string_terminator != b"\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00", self.string_terminator, self._io, u"/types/file/seq/2")
             if (self.header.path_name_size % 2) == 1:
                 self._debug['path_name_padding']['start'] = self._io.pos()
                 self.path_name_padding = self._io.read_bytes(1)
                 self._debug['path_name_padding']['end'] = self._io.pos()
-                if not self.path_name_padding == b"\x00":
+                if self.path_name_padding != b"\x00":
                     raise kaitaistruct.ValidationNotEqualError(b"\x00", self.path_name_padding, self._io, u"/types/file/seq/3")
 
             self._debug['file_data']['start'] = self._io.pos()
@@ -68,7 +70,7 @@ class CpioOldLe(KaitaiStruct):
                 self._debug['file_data_padding']['start'] = self._io.pos()
                 self.file_data_padding = self._io.read_bytes(1)
                 self._debug['file_data_padding']['end'] = self._io.pos()
-                if not self.file_data_padding == b"\x00":
+                if self.file_data_padding != b"\x00":
                     raise kaitaistruct.ValidationNotEqualError(b"\x00", self.file_data_padding, self._io, u"/types/file/seq/5")
 
             if  ((self.path_name == b"\x54\x52\x41\x49\x4C\x45\x52\x21\x21\x21") and (self.header.file_size.value == 0)) :
@@ -90,7 +92,7 @@ class CpioOldLe(KaitaiStruct):
             self._debug['magic']['start'] = self._io.pos()
             self.magic = self._io.read_bytes(2)
             self._debug['magic']['end'] = self._io.pos()
-            if not self.magic == b"\xC7\x71":
+            if self.magic != b"\xC7\x71":
                 raise kaitaistruct.ValidationNotEqualError(b"\xC7\x71", self.magic, self._io, u"/types/file_header/seq/0")
             self._debug['device_number']['start'] = self._io.pos()
             self.device_number = self._io.read_u2le()

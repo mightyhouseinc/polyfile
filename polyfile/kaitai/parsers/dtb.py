@@ -8,7 +8,9 @@ import collections
 
 
 if parse_version(kaitaistruct.__version__) < parse_version('0.9'):
-    raise Exception("Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have %s" % (kaitaistruct.__version__))
+    raise Exception(
+        f"Incompatible Kaitai Struct Python API: 0.9 or later is required, but you have {kaitaistruct.__version__}"
+    )
 
 class Dtb(KaitaiStruct):
     """Also referred to as Devicetree Blob (DTB). It is a flat binary encoding
@@ -58,7 +60,7 @@ class Dtb(KaitaiStruct):
         self._debug['magic']['start'] = self._io.pos()
         self.magic = self._io.read_bytes(4)
         self._debug['magic']['end'] = self._io.pos()
-        if not self.magic == b"\xD0\x0D\xFE\xED":
+        if self.magic != b"\xD0\x0D\xFE\xED":
             raise kaitaistruct.ValidationNotEqualError(b"\xD0\x0D\xFE\xED", self.magic, self._io, u"/seq/0")
         self._debug['total_size']['start'] = self._io.pos()
         self.total_size = self._io.read_u4be()
@@ -103,7 +105,7 @@ class Dtb(KaitaiStruct):
             self.entries = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['entries']:
+                if 'arr' not in self._debug['entries']:
                     self._debug['entries']['arr'] = []
                 self._debug['entries']['arr'].append({'start': self._io.pos()})
                 _t_entries = Dtb.MemoryBlockEntry(self._io, self, self._root)
@@ -128,7 +130,7 @@ class Dtb(KaitaiStruct):
             self.nodes = []
             i = 0
             while True:
-                if not 'arr' in self._debug['nodes']:
+                if 'arr' not in self._debug['nodes']:
                     self._debug['nodes']['arr'] = []
                 self._debug['nodes']['arr'].append({'start': self._io.pos()})
                 _t_nodes = Dtb.FdtNode(self._io, self, self._root)
@@ -172,7 +174,7 @@ class Dtb(KaitaiStruct):
             self.strings = []
             i = 0
             while not self._io.is_eof():
-                if not 'arr' in self._debug['strings']:
+                if 'arr' not in self._debug['strings']:
                     self._debug['strings']['arr'] = []
                 self._debug['strings']['arr'].append({'start': self._io.pos()})
                 self.strings.append((self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII"))
